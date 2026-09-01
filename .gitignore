@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+.venv/
+venv/
+env/
+
+# Node
+node_modules/
+frontend/dist/
+.vite/
+
+# Environment Variables & Secrets
+.env
+*.env.local
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# User Uploaded Content (Preserve directory structure)
+backend/uploads/*/*.*
+!backend/uploads/*/.gitkeep
+
+# Alembic & Logs
+alembic/versions/__pycache__/
+*.log
+
+# Coverage & Tests
+htmlcov/
+.coverage
+.pytest_cache/
