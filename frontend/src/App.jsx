@@ -10,6 +10,8 @@ import Dresses from './pages/Dresses';
 import Jewellery from './pages/Jewellery';
 import Makeup from './pages/Makeup';
 import Analyzer from './pages/Analyzer';
+import Outfits from './pages/Outfits';
+import Recommendations from './pages/Recommendations';
 import StylistPage from './pages/StylistPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -78,7 +80,7 @@ export default function App() {
           <Route path="/makeup" element={<Makeup />} />
           <Route path="/stylist" element={<StylistPage />} />
 
-          {/* AI Analyzer & Wardrobe */}
+          {/* AI Analyzer, Wardrobe & Lookbook Recommendations */}
           <Route
             path="/analyzer"
             element={
@@ -91,19 +93,23 @@ export default function App() {
             path="/outfits"
             element={
               <ProtectedRoute>
-                <Analyzer />
+                <Outfits />
               </ProtectedRoute>
             }
+          />
+          <Route
+            path="/wardrobe"
+            element={<Navigate to="/outfits" replace />}
           />
           <Route
             path="/recommendations"
             element={
               <ProtectedRoute>
-                <Analyzer />
+                <Recommendations />
               </ProtectedRoute>
             }
           />
-          <Route path="/dashboard" element={<Navigate to="/analyzer" replace />} />
+          <Route path="/dashboard" element={<Navigate to="/outfits" replace />} />
 
           {/* User Profile */}
           <Route

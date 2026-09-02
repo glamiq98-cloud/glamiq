@@ -56,30 +56,54 @@ async def generate_and_save_recommendation(
                 outfit.color_palette = vision.get("color_palette", "Mustard Yellow & Warm Gold")
                 await db.flush()
 
-    # 2. Run rule-based engine
+    # 2. Run personalized rule-based engine
     advice = generate_style_advice(
         color_palette=outfit.color_palette,
         style_type=outfit.style_type,
         occasion_name=occasion_name,
         skin_tone=user.skin_tone,
+        preferences=user.preferences,
+        user_name=user.full_name,
+        gender=user.gender,
     )
 
-    # 3. Query matching fashion items from catalog
+    # 3. Query matching fashion items from catalog with personalized weighting
     metal_keyword = advice["jewelry_metal_keyword"]
     target_makeup_shades = advice["target_makeup_shades"]
+    prefs = user.preferences or {}
+    metal_pref = prefs.get("metal_preference", "").lower()
 
     # Match jewelry items (category='jewelry', approved)
     jewelry_query = select(FashionItem).where(
         FashionItem.category == "jewelry",
         FashionItem.status == "approved",
     )
-    if metal_keyword:
+    if metal_pref == "silver":
+        jewelry_query = jewelry_query.where(
+            or_(
+                FashionItem.color.ilike("%silver%"),
+                FashionItem.color.ilike("%platinum%"),
+                FashionItem.item_name.ilike("%silver%"),
+                FashionItem.item_name.ilike("%platinum%"),
+            )
+        )
+    elif metal_pref == "gold":
+        jewelry_query = jewelry_query.where(
+            or_(
+                FashionItem.color.ilike("%gold%"),
+                FashionItem.color.ilike("%kundan%"),
+                FashionItem.item_name.ilike("%kundan%"),
+                FashionItem.item_name.ilike("%gold%"),
+            )
+        )
+    elif metal_keyword:
         jewelry_query = jewelry_query.where(
             or_(
                 FashionItem.color.ilike(f"%{metal_keyword}%"),
                 FashionItem.item_name.ilike(f"%{metal_keyword}%"),
             )
         )
+    
     jewelry_res = await db.execute(jewelry_query.limit(4))
     matched_jewelry = list(jewelry_res.scalars().all())
 

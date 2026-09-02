@@ -7,6 +7,7 @@ class ProfileUpdateRequest(BaseModel):
     """Fields a user can update on their profile."""
     full_name: str | None = Field(None, min_length=1, max_length=100)
     gender: str | None = None
+    skin_tone: str | None = None
     preferences: dict | None = None
 
 

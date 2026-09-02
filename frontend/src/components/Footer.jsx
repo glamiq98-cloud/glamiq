@@ -29,12 +29,12 @@ export default function Footer() {
             Collections
           </h4>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>
-            <li><Link to="/dresses" style={{ color: 'inherit' }}>Pakistani Bridal Lehengas</Link></li>
-            <li><Link to="/dresses" style={{ color: 'inherit' }}>Festive & Velvet Formals</Link></li>
-            <li><Link to="/jewellery" style={{ color: 'inherit' }}>Heritage Kundan & Polki Sets</Link></li>
-            <li><Link to="/jewellery" style={{ color: 'inherit' }}>Chandbalis & Matha Patti</Link></li>
-            <li><Link to="/makeup" style={{ color: 'inherit' }}>Velvet Matte Lip Colors</Link></li>
-            <li><Link to="/makeup" style={{ color: 'inherit' }}>Golden Hour Eye Palettes</Link></li>
+            <li><Link to="/dresses?collection=bridal" style={{ color: 'inherit' }}>Pakistani Bridal Lehengas</Link></li>
+            <li><Link to="/dresses?collection=festive" style={{ color: 'inherit' }}>Festive & Velvet Formals</Link></li>
+            <li><Link to="/jewellery?collection=kundan" style={{ color: 'inherit' }}>Heritage Kundan & Polki Sets</Link></li>
+            <li><Link to="/jewellery?collection=chandbali" style={{ color: 'inherit' }}>Chandbalis & Matha Patti</Link></li>
+            <li><Link to="/makeup?collection=lips" style={{ color: 'inherit' }}>Velvet Matte Lip Colors</Link></li>
+            <li><Link to="/makeup?collection=eyes" style={{ color: 'inherit' }}>Golden Hour Eye Palettes</Link></li>
           </ul>
         </div>
 
@@ -47,7 +47,7 @@ export default function Footer() {
             <li><Link to="/analyzer" style={{ color: 'inherit' }}>✨ AI Dress & Color Analyzer</Link></li>
             <li><Link to="/stylist" style={{ color: 'inherit' }}>💬 24/7 Virtual Stylist Assistant</Link></li>
             <li><Link to="/profile" style={{ color: 'inherit' }}>🧬 Skin Tone & Undertone DNA</Link></li>
-            <li><Link to="/analyzer" style={{ color: 'inherit' }}>👗 Wardrobe & Lookbook</Link></li>
+            <li><Link to="/outfits" style={{ color: 'inherit' }}>👗 Wardrobe & Lookbook</Link></li>
             <li><Link to="/admin/login" style={{ color: 'inherit' }}>🛡️ Admin Management Console</Link></li>
           </ul>
         </div>

@@ -375,58 +375,112 @@ export default function Home() {
           </Link>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
           
-          {/* Category Card 1: Dresses */}
-          <Link to="/dresses" className="glass-card" style={{ overflow: 'hidden', padding: 0, textDecoration: 'none', transition: 'transform 0.3s ease' }}>
+          {/* Collection 1: Pakistani Bridal Lehenga */}
+          <Link to="/dresses?collection=bridal" className="glass-card" style={{ overflow: 'hidden', padding: 0, textDecoration: 'none', transition: 'transform 0.3s ease' }}>
+            <div style={{ height: '320px', position: 'relative', overflow: 'hidden' }}>
+              <img
+                src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=600&q=80"
+                alt="Pakistani Bridal Lehenga"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
+                onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
+                onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+              />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(12,7,14,0.92) 0%, transparent 60%)', padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                <span className="badge-pill" style={{ width: 'fit-content', marginBottom: '0.35rem' }}>👑 Bridal Couture</span>
+                <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#ffffff' }}>Pakistani Bridal Lehenga</h3>
+                <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>Zardozi Lehengas, Handcrafted Maxis & Royal Barat Ensembles</p>
+              </div>
+            </div>
+          </Link>
+
+          {/* Collection 2: Festive & Velvet Formal */}
+          <Link to="/dresses?collection=festive" className="glass-card" style={{ overflow: 'hidden', padding: 0, textDecoration: 'none', transition: 'transform 0.3s ease' }}>
             <div style={{ height: '320px', position: 'relative', overflow: 'hidden' }}>
               <img
                 src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=600&q=80"
-                alt="Designer Dresses"
+                alt="Festive & Velvet Formal"
                 style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
                 onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
                 onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
               />
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(12,7,14,0.9) 0%, transparent 60%)', padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-                <span className="badge-pill" style={{ width: 'fit-content', marginBottom: '0.35rem' }}>👗 500+ Styles</span>
-                <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#ffffff' }}>Designer Dresses</h3>
-                <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>Bridal Lehengas, Pret Kurtis & Velvet Formals</p>
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(12,7,14,0.92) 0%, transparent 60%)', padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                <span className="badge-pill" style={{ width: 'fit-content', marginBottom: '0.35rem' }}>✨ Luxury Pret</span>
+                <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#ffffff' }}>Festive & Velvet Formal</h3>
+                <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>Raw Silk Kurtis, Organza Anarkalis & Micro-Velvet Peshwas</p>
               </div>
             </div>
           </Link>
 
-          {/* Category Card 2: Kundan & Polki Jewellery */}
-          <Link to="/jewellery" className="glass-card" style={{ overflow: 'hidden', padding: 0, textDecoration: 'none', transition: 'transform 0.3s ease' }}>
+          {/* Collection 3: Heritage Kundans */}
+          <Link to="/jewellery?collection=kundan" className="glass-card" style={{ overflow: 'hidden', padding: 0, textDecoration: 'none', transition: 'transform 0.3s ease' }}>
             <div style={{ height: '320px', position: 'relative', overflow: 'hidden' }}>
               <img
                 src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=600&q=80"
-                alt="Kundan & Polki Jewellery"
+                alt="Heritage Kundans"
                 style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
                 onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
                 onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
               />
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(12,7,14,0.9) 0%, transparent 60%)', padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-                <span className="badge-pill badge-gold" style={{ width: 'fit-content', marginBottom: '0.35rem' }}>💍 300+ Pieces</span>
-                <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#ffffff' }}>Kundan & Polki Sets</h3>
-                <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>Chokers, Chandbalis, Jhumkas & Heritage Bangles</p>
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(12,7,14,0.92) 0%, transparent 60%)', padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                <span className="badge-pill badge-gold" style={{ width: 'fit-content', marginBottom: '0.35rem' }}>💍 22K Gold & Polki</span>
+                <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#ffffff' }}>Heritage Kundans</h3>
+                <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>Royal Chokers, Layered Malas & Artisan-Carved Bridal Kadas</p>
               </div>
             </div>
           </Link>
 
-          {/* Category Card 3: Glam Makeup */}
-          <Link to="/makeup" className="glass-card" style={{ overflow: 'hidden', padding: 0, textDecoration: 'none', transition: 'transform 0.3s ease' }}>
+          {/* Collection 4: Chandbalis & Matha Patti */}
+          <Link to="/jewellery?collection=chandbali" className="glass-card" style={{ overflow: 'hidden', padding: 0, textDecoration: 'none', transition: 'transform 0.3s ease' }}>
             <div style={{ height: '320px', position: 'relative', overflow: 'hidden' }}>
               <img
-                src="https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=600&q=80"
-                alt="Pakistani Glam Makeup"
+                src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=600&q=80"
+                alt="Chandbalis & Matha Patti"
                 style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
                 onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
                 onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
               />
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(12,7,14,0.9) 0%, transparent 60%)', padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-                <span className="badge-pill" style={{ width: 'fit-content', marginBottom: '0.35rem' }}>💄 Signature Beauty</span>
-                <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#ffffff' }}>Pakistani Glam Makeup</h3>
-                <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>Velvet Mattes, Bronze Highlighters & Warm Palettes</p>
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(12,7,14,0.92) 0%, transparent 60%)', padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                <span className="badge-pill badge-gold" style={{ width: 'fit-content', marginBottom: '0.35rem' }}>🌙 Heirloom Ornaments</span>
+                <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#ffffff' }}>Chandbalis & Matha Patti</h3>
+                <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>Cascading Pearl Forehead Bands, Jhumkas & Crescent Earrings</p>
+              </div>
+            </div>
+          </Link>
+
+          {/* Collection 5: Velvet Matte Lip Color */}
+          <Link to="/makeup?collection=lips" className="glass-card" style={{ overflow: 'hidden', padding: 0, textDecoration: 'none', transition: 'transform 0.3s ease' }}>
+            <div style={{ height: '320px', position: 'relative', overflow: 'hidden' }}>
+              <img
+                src="https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=600&q=80"
+                alt="Velvet Matte Lip Color"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
+                onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
+                onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+              />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(12,7,14,0.92) 0%, transparent 60%)', padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                <span className="badge-pill" style={{ width: 'fit-content', marginBottom: '0.35rem' }}>💄 Signature Lip Wear</span>
+                <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#ffffff' }}>Velvet Matte Lip Color</h3>
+                <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>Crimson Bridal Stains, Spiced Terracottas & Caramel Nudes</p>
+              </div>
+            </div>
+          </Link>
+
+          {/* Collection 6: Golden Hour Eye */}
+          <Link to="/makeup?collection=eyes" className="glass-card" style={{ overflow: 'hidden', padding: 0, textDecoration: 'none', transition: 'transform 0.3s ease' }}>
+            <div style={{ height: '320px', position: 'relative', overflow: 'hidden' }}>
+              <img
+                src="https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=600&q=80"
+                alt="Golden Hour Eye"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
+                onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
+                onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+              />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(12,7,14,0.92) 0%, transparent 60%)', padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                <span className="badge-pill" style={{ width: 'fit-content', marginBottom: '0.35rem' }}>✨ Candlelight Radiance</span>
+                <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#ffffff' }}>Golden Hour Eye</h3>
+                <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>Sunset Metallic Palettes, Molten Bronzers & Dewy Luminizers</p>
               </div>
             </div>
           </Link>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 
 export const PAKISTANI_MAKEUP = [
@@ -85,11 +86,30 @@ export const PAKISTANI_MAKEUP = [
 ];
 
 export default function Makeup() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const collectionParam = searchParams.get('collection') || 'all';
+
   const [selectedShade, setSelectedShade] = useState('all');
   const { addToCart } = useCart();
   const [addedItem, setAddedItem] = useState(null);
 
   const filteredMakeup = PAKISTANI_MAKEUP.filter((item) => {
+    // Collection Filter
+    if (collectionParam === 'lips') {
+      const isLip =
+        item.item_name.toLowerCase().includes('lip') ||
+        item.item_name.toLowerCase().includes('stain') ||
+        item.item_name.toLowerCase().includes('elixir');
+      if (!isLip) return false;
+    } else if (collectionParam === 'eyes') {
+      const isEye =
+        item.item_name.toLowerCase().includes('eye') ||
+        item.item_name.toLowerCase().includes('palette') ||
+        item.item_name.toLowerCase().includes('luminizer') ||
+        item.item_name.toLowerCase().includes('blush');
+      if (!isEye) return false;
+    }
+
     if (selectedShade === 'all') return true;
     return item.color.toLowerCase().includes(selectedShade.toLowerCase());
   });
@@ -111,9 +131,61 @@ export default function Makeup() {
         <h1 style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 800, color: '#ffffff', fontFamily: 'var(--font-display)', marginBottom: '0.75rem' }}>
           Curated <span className="gradient-text-italic">Glam Makeup Looks</span>
         </h1>
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.05rem', maxWidth: '650px', margin: '0 auto' }}>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.05rem', maxWidth: '650px', margin: '0 auto 1.5rem' }}>
           Color-matched to South Asian skin undertones and festive luxury attire. Long-wear pigments crafted for wedding celebrations.
         </p>
+
+        {/* Collection Selector Tabs */}
+        <div style={{ display: 'inline-flex', gap: '0.5rem', background: 'rgba(36, 20, 42, 0.8)', padding: '0.4rem', borderRadius: 'var(--radius-pill)', border: '1px solid rgba(236, 72, 153, 0.25)', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <button
+            onClick={() => setSearchParams({})}
+            style={{
+              padding: '0.5rem 1.25rem',
+              borderRadius: 'var(--radius-pill)',
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              border: 'none',
+              background: collectionParam === 'all' ? 'linear-gradient(135deg, #ec4899, #be185d)' : 'transparent',
+              color: '#ffffff',
+              transition: 'all 0.2s',
+            }}
+          >
+            All Makeup
+          </button>
+          <button
+            onClick={() => setSearchParams({ collection: 'lips' })}
+            style={{
+              padding: '0.5rem 1.25rem',
+              borderRadius: 'var(--radius-pill)',
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              border: 'none',
+              background: collectionParam === 'lips' ? 'linear-gradient(135deg, #ec4899, #be185d)' : 'transparent',
+              color: '#ffffff',
+              transition: 'all 0.2s',
+            }}
+          >
+            💋 Velvet Matte Lip Colors
+          </button>
+          <button
+            onClick={() => setSearchParams({ collection: 'eyes' })}
+            style={{
+              padding: '0.5rem 1.25rem',
+              borderRadius: 'var(--radius-pill)',
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              border: 'none',
+              background: collectionParam === 'eyes' ? 'linear-gradient(135deg, #ec4899, #be185d)' : 'transparent',
+              color: '#ffffff',
+              transition: 'all 0.2s',
+            }}
+          >
+            ✨ Golden Hour Eye Palettes
+          </button>
+        </div>
       </div>
 
       {/* Filter Tabs */}

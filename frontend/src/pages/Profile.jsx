@@ -65,6 +65,7 @@ export default function Profile() {
       const res = await client.put('/profile', {
         full_name: formData.full_name,
         gender: formData.gender || null,
+        skin_tone: currentSkinTone || null,
         preferences: formData.preferences,
       });
       if (updateUser) updateUser(res.data);
@@ -76,6 +77,19 @@ export default function Profile() {
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSetSkinTone = async (tone) => {
+    setCurrentSkinTone(tone);
+    try {
+      const res = await client.put('/profile', {
+        skin_tone: tone,
+      });
+      if (updateUser) updateUser(res.data);
+      setMessage({ text: `Skin Tone DNA successfully set to ${tone.toUpperCase()}! ✨`, type: 'success' });
+    } catch (err) {
+      console.error('Failed to update skin tone', err);
     }
   };
 
@@ -227,43 +241,106 @@ export default function Profile() {
             style={{
               padding: '1.25rem',
               borderRadius: 'var(--radius-md)',
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid var(--color-border)',
+              background: 'rgba(36, 20, 42, 0.65)',
+              border: '1px solid rgba(236, 72, 153, 0.25)',
               textAlign: 'left',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-secondary)' }}>
-                AUTO-DETECTED SKIN TONE
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-primary-light)', letterSpacing: '0.05em' }}>
+                🧬 SKIN TONE & UNDERTONE DNA
               </span>
-              <span style={{ fontSize: '1.1rem' }}>🎨</span>
+              <span style={{ fontSize: '1.2rem' }}>🎨</span>
             </div>
 
-            {currentSkinTone && skinToneBadges[currentSkinTone] ? (
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                  <div
-                    style={{
-                      width: '24px',
-                      height: '24px',
-                      borderRadius: '50%',
-                      backgroundColor: skinToneBadges[currentSkinTone].color,
-                      border: '2px solid rgba(255,255,255,0.2)',
-                    }}
-                  />
-                  <span style={{ fontWeight: 700, fontSize: '1rem', textTransform: 'capitalize' }}>
-                    {skinToneBadges[currentSkinTone].label}
-                  </span>
+            {(() => {
+              const badgeKey = currentSkinTone ? (
+                currentSkinTone.toLowerCase().includes('fair') ? 'fair' :
+                (currentSkinTone.toLowerCase().includes('dark') || currentSkinTone.toLowerCase().includes('dusky')) ? 'dark' : 'medium'
+              ) : null;
+
+              const badge = badgeKey ? skinToneBadges[badgeKey] : null;
+
+              return badge ? (
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.4rem' }}>
+                    <div
+                      style={{
+                        width: '26px',
+                        height: '26px',
+                        borderRadius: '50%',
+                        backgroundColor: badge.color,
+                        border: '2px solid #ffffff',
+                        boxShadow: '0 0 10px rgba(0,0,0,0.5)',
+                      }}
+                    />
+                    <div>
+                      <span style={{ fontWeight: 800, fontSize: '1rem', color: '#ffffff', textTransform: 'capitalize' }}>
+                        {badge.label}
+                      </span>
+                      <span style={{ fontSize: '0.75rem', color: '#4ade80', marginLeft: '8px' }}>
+                        ✓ Calibrated
+                      </span>
+                    </div>
+                  </div>
+                  <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', lineHeight: 1.45, marginTop: '0.4rem' }}>
+                    {badge.desc}
+                  </p>
                 </div>
-                <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
-                  {skinToneBadges[currentSkinTone].desc}
+              ) : (
+                <p style={{ fontSize: '0.825rem', color: 'var(--color-text-muted)', marginBottom: '1rem' }}>
+                  Upload a photo or choose your tone below to personalize all jewelry & makeup matches.
                 </p>
+              );
+            })()}
+
+            {/* Quick Tone Selection Pills */}
+            <div style={{ marginBottom: '1rem' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-muted)', display: 'block', marginBottom: '0.5rem' }}>
+                Quick Calibrate Skin Tone:
+              </span>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.35rem' }}>
+                {[
+                  { key: 'fair', label: 'Fair' },
+                  { key: 'medium', label: 'Medium' },
+                  { key: 'dark', label: 'Dusky' },
+                ].map((t) => {
+                  const isActive = currentSkinTone?.toLowerCase().includes(t.key);
+                  return (
+                    <button
+                      key={t.key}
+                      type="button"
+                      onClick={() => handleSetSkinTone(t.key)}
+                      style={{
+                        padding: '0.45rem 0.3rem',
+                        borderRadius: 'var(--radius-sm)',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        border: isActive ? '1px solid #ec4899' : '1px solid rgba(236, 72, 153, 0.2)',
+                        background: isActive ? 'linear-gradient(135deg, #ec4899, #be185d)' : 'rgba(255, 255, 255, 0.05)',
+                        color: '#ffffff',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      {t.label}
+                    </button>
+                  );
+                })}
               </div>
-            ) : (
-              <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
-                Upload a portrait photo above to automatically detect your skin undertone for tailored makeup suggestions.
-              </p>
-            )}
+            </div>
+
+            {/* Direct Auto-Detect Button */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingImg}
+              className="btn btn-secondary"
+              style={{ width: '100%', padding: '0.55rem', fontSize: '0.8125rem', gap: '0.4rem' }}
+            >
+              <span>{uploadingImg ? '⏳' : '📷'}</span>
+              <span>{uploadingImg ? 'Analyzing Face & Undertone...' : 'Auto-Detect from Photo'}</span>
+            </button>
           </div>
         </div>
 

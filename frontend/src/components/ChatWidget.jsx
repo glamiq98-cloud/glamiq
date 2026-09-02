@@ -103,13 +103,13 @@ export default function ChatWidget() {
             position: 'fixed',
             bottom: '24px',
             right: '24px',
-            zIndex: 999,
+            zIndex: 9999,
             padding: '0.85rem 1.4rem',
             borderRadius: '999px',
             background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))',
             color: '#FFF',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            boxShadow: '0 8px 30px rgba(183, 110, 121, 0.45)',
+            border: '1px solid rgba(255, 255, 255, 0.25)',
+            boxShadow: '0 8px 30px rgba(236, 72, 153, 0.5)',
             display: 'flex',
             alignItems: 'center',
             gap: '0.6rem',
@@ -138,15 +138,16 @@ export default function ChatWidget() {
             position: 'fixed',
             bottom: '24px',
             right: '24px',
-            width: '90vw',
-            maxWidth: '400px',
-            height: '560px',
-            maxHeight: '85vh',
-            zIndex: 1000,
-            borderRadius: 'var(--radius-lg)',
-            backgroundColor: 'var(--color-bg-secondary)',
-            border: '1px solid var(--color-border)',
-            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5)',
+            width: 'calc(100vw - 32px)',
+            maxWidth: '420px',
+            height: '590px',
+            maxHeight: 'calc(100vh - 80px)',
+            zIndex: 9999,
+            borderRadius: '1.25rem',
+            backgroundColor: '#160919',
+            backgroundImage: 'linear-gradient(180deg, #1c0c20 0%, #120614 100%)',
+            border: '1px solid #4a2353',
+            boxShadow: '0 25px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(236, 72, 153, 0.25)',
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
@@ -155,50 +156,67 @@ export default function ChatWidget() {
           {/* Header */}
           <div
             style={{
-              padding: '1rem 1.25rem',
-              background: 'linear-gradient(135deg, rgba(183, 110, 121, 0.2), rgba(201, 169, 110, 0.1))',
-              borderBottom: '1px solid var(--color-border)',
+              padding: '0.95rem 1.25rem',
+              background: 'linear-gradient(135deg, #2c1232 0%, #1a091e 100%)',
+              borderBottom: '1px solid #4a2353',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
+              flexShrink: 0,
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <div
                 style={{
-                  width: '36px',
-                  height: '36px',
+                  width: '38px',
+                  height: '38px',
                   borderRadius: '50%',
-                  background: 'var(--color-primary)',
+                  background: 'linear-gradient(135deg, #ec4899, #be185d)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '1.2rem',
+                  boxShadow: '0 2px 10px rgba(236, 72, 153, 0.4)',
                 }}
               >
                 ✨
               </div>
               <div>
-                <h4 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0 }}>Glam IQ Stylist</h4>
-                <span style={{ fontSize: '0.75rem', color: '#4ade80', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <h4 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0, color: '#ffffff' }}>
+                  Glam IQ Stylist
+                </h4>
+                <span style={{ fontSize: '0.75rem', color: '#4ade80', display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4ade80' }} />
                   Online & Stylist-Ready
                 </span>
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               {messages.length > 0 && (
                 <button
                   onClick={handleClearHistory}
                   title="Clear chat history"
                   style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--color-text-muted)',
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '8px',
+                    color: '#d1c4d4',
                     cursor: 'pointer',
-                    fontSize: '0.9rem',
-                    padding: '4px 6px',
+                    fontSize: '0.85rem',
+                    padding: '6px 8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(244, 63, 94, 0.2)';
+                    e.currentTarget.style.borderColor = 'rgba(244, 63, 94, 0.5)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
                   }}
                 >
                   🗑️
@@ -206,13 +224,25 @@ export default function ChatWidget() {
               )}
               <button
                 onClick={() => setIsOpen(false)}
+                title="Close chat"
                 style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--color-text)',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '8px',
+                  color: '#ffffff',
                   cursor: 'pointer',
-                  fontSize: '1.2rem',
-                  padding: '4px',
+                  fontSize: '1rem',
+                  padding: '5px 9px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
                 }}
               >
                 ✕
@@ -229,45 +259,49 @@ export default function ChatWidget() {
               display: 'flex',
               flexDirection: 'column',
               gap: '1rem',
+              backgroundColor: '#100512',
             }}
           >
             {fetchingHistory ? (
-              <div style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--color-text-secondary)' }}>
+              <div style={{ textAlign: 'center', padding: '2rem 0', color: '#d1c4d4' }}>
                 <div className="spinner" style={{ width: '24px', height: '24px', margin: '0 auto 0.5rem' }} />
                 <span style={{ fontSize: '0.85rem' }}>Loading conversation…</span>
               </div>
             ) : messages.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'var(--color-text-secondary)' }}>
+              <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#d1c4d4' }}>
                 <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>💎</div>
-                <h4 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--color-text)', marginBottom: '0.35rem' }}>
+                <h4 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#ffffff', marginBottom: '0.35rem' }}>
                   Hello, {user?.full_name?.split(' ')[0] || 'there'}!
                 </h4>
-                <p style={{ fontSize: '0.85rem', lineHeight: 1.5, marginBottom: '1.25rem' }}>
-                  I'm your personal AI stylist. Ask me for color advice, metal tones, or matching jewelry & makeup tips!
+                <p style={{ fontSize: '0.85rem', lineHeight: 1.5, color: '#c9b7cd', marginBottom: '1.25rem' }}>
+                  I'm your personal AI stylist. Ask me for color matching, jewelry tone recommendations, or complete occasion styling!
                 </p>
 
                 {/* Quick suggestions */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                   {quickPrompts.map((q, idx) => (
                     <button
                       key={idx}
                       onClick={() => handleSendMessage(q)}
                       style={{
-                        padding: '0.6rem 0.85rem',
-                        borderRadius: 'var(--radius-md)',
-                        background: 'rgba(255, 255, 255, 0.04)',
-                        border: '1px solid var(--color-border)',
-                        color: 'var(--color-text-secondary)',
-                        fontSize: '0.8rem',
+                        padding: '0.7rem 0.95rem',
+                        borderRadius: '0.75rem',
+                        background: '#200f25',
+                        border: '1px solid #4a2553',
+                        color: '#f5e8f8',
+                        fontSize: '0.82rem',
                         textAlign: 'left',
                         cursor: 'pointer',
-                        transition: 'background 0.2s',
+                        transition: 'all 0.2s',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(183, 110, 121, 0.15)';
+                        e.currentTarget.style.background = '#32153b';
+                        e.currentTarget.style.borderColor = '#ec4899';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                        e.currentTarget.style.background = '#200f25';
+                        e.currentTarget.style.borderColor = '#4a2553';
                       }}
                     >
                       💬 {q}
@@ -287,19 +321,26 @@ export default function ChatWidget() {
                   <div
                     style={{
                       maxWidth: '85%',
-                      padding: '0.75rem 1rem',
+                      padding: '0.85rem 1.1rem',
                       borderRadius:
                         m.sender === 'user'
-                          ? '16px 16px 2px 16px'
-                          : '16px 16px 16px 2px',
+                          ? '18px 18px 4px 18px'
+                          : '18px 18px 18px 4px',
                       background:
                         m.sender === 'user'
-                          ? 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))'
-                          : 'rgba(255, 255, 255, 0.06)',
-                      color: m.sender === 'user' ? '#FFF' : 'var(--color-text)',
-                      fontSize: '0.9rem',
-                      lineHeight: '1.5',
-                      border: m.sender === 'user' ? 'none' : '1px solid var(--color-border)',
+                          ? 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)'
+                          : '#220f27',
+                      color: m.sender === 'user' ? '#FFFFFF' : '#f5e8f8',
+                      fontSize: '0.92rem',
+                      lineHeight: '1.55',
+                      border:
+                        m.sender === 'user'
+                          ? 'none'
+                          : '1px solid #4a2452',
+                      boxShadow:
+                        m.sender === 'user'
+                          ? '0 4px 15px rgba(236, 72, 153, 0.35)'
+                          : '0 3px 12px rgba(0, 0, 0, 0.45)',
                       wordBreak: 'break-word',
                       whiteSpace: 'pre-wrap',
                     }}
@@ -315,17 +356,27 @@ export default function ChatWidget() {
               <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
                 <div
                   style={{
-                    padding: '0.75rem 1rem',
-                    borderRadius: '16px 16px 16px 2px',
-                    background: 'rgba(255, 255, 255, 0.06)',
-                    border: '1px solid var(--color-border)',
+                    padding: '0.75rem 1.1rem',
+                    borderRadius: '18px 18px 18px 4px',
+                    background: '#220f27',
+                    border: '1px solid #4a2452',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '4px',
+                    gap: '8px',
+                    boxShadow: '0 3px 12px rgba(0, 0, 0, 0.45)',
                   }}
                 >
-                  <span className="dot-pulse" style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--color-primary-light)' }} />
-                  <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Stylist is thinking…</span>
+                  <span
+                    style={{
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      background: '#ec4899',
+                      display: 'inline-block',
+                      animation: 'pulseGlow 1.5s infinite',
+                    }}
+                  />
+                  <span style={{ fontSize: '0.85rem', color: '#d1c4d4' }}>Stylist is thinking…</span>
                 </div>
               </div>
             )}
@@ -340,11 +391,12 @@ export default function ChatWidget() {
               handleSendMessage();
             }}
             style={{
-              padding: '0.75rem 1rem',
-              borderTop: '1px solid var(--color-border)',
+              padding: '0.85rem 1rem',
+              borderTop: '1px solid #4a2353',
               display: 'flex',
-              gap: '0.5rem',
-              background: 'rgba(0, 0, 0, 0.2)',
+              gap: '0.6rem',
+              background: '#190a1c',
+              flexShrink: 0,
             }}
           >
             <input
@@ -352,14 +404,36 @@ export default function ChatWidget() {
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="Ask styling question…"
-              className="input"
-              style={{ flex: 1, padding: '0.6rem 0.85rem', fontSize: '0.875rem' }}
+              style={{
+                flex: 1,
+                padding: '0.75rem 1.1rem',
+                fontSize: '0.9rem',
+                backgroundColor: '#260f2c',
+                border: '1.5px solid #4a2353',
+                borderRadius: '999px',
+                color: '#ffffff',
+                outline: 'none',
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = '#ec4899';
+                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(236, 72, 153, 0.25)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = '#4a2353';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
             />
             <button
               type="submit"
               disabled={loading || !inputMessage.trim()}
               className="btn btn-primary"
-              style={{ padding: '0.6rem 1rem', fontSize: '0.9rem' }}
+              style={{
+                padding: '0.75rem 1.35rem',
+                fontSize: '0.9rem',
+                borderRadius: '999px',
+                cursor: loading || !inputMessage.trim() ? 'not-allowed' : 'pointer',
+                opacity: loading || !inputMessage.trim() ? 0.6 : 1,
+              }}
             >
               Send
             </button>

@@ -17,6 +17,7 @@
   --color-bg: #0c070e;
   --color-bg-alt: #130a16;
   --color-bg-card: #1a0f1e;
+  --color-bg-secondary: #1a0f1e;
   --color-bg-elevated: #24142a;
   --color-surface: #2e1a35;
   --color-border: #3d2345;
@@ -321,6 +322,15 @@ select option {
 @keyframes pulseGlow {
   0%, 100% { box-shadow: 0 0 20px rgba(236, 72, 153, 0.25); }
   50%      { box-shadow: 0 0 45px rgba(236, 72, 153, 0.55); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-fade-in {

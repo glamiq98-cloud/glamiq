@@ -36,27 +36,105 @@ Use this context to provide specific, grounded answers (e.g. referencing their m
 
 
 def _generate_fallback_response(user_msg: str, skin_tone: str, outfit_color: str, occ: str) -> str:
-    """Intelligent rule-based fallback when AI APIs are unreachable or offline."""
+    """Intelligent, diverse rule-based fallback when AI APIs are unreachable or offline."""
     msg_lower = user_msg.lower()
-    
-    if "gold" in msg_lower or "silver" in msg_lower or "metal" in msg_lower or "jewelry" in msg_lower:
-        if "warm" in outfit_color.lower() or "red" in outfit_color.lower() or "gold" in outfit_color.lower():
-            return "For warm tones like red, coral, or warm neutrals, luminous gold or warm rose gold jewelry creates a radiant harmony. A statement necklace or layered herringbone chains will elevate your look beautifully."
-        else:
-            return "Silver and platinum jewelry add crisp elegance to cool and neutral palettes like navy, royal blue, black, or emerald. Pair delicate drop earrings or a tennis necklace for effortless sophistication."
-            
-    if "lip" in msg_lower or "makeup" in msg_lower or "shade" in msg_lower or "blush" in msg_lower:
-        if skin_tone == "fair":
-            return "With a fair complexion, soft cool berries, rosy pinks, and delicate champagne highlighters provide gorgeous definition without overpowering your natural undertones."
-        elif skin_tone == "dark":
-            return "Deep rich skin tones radiate with bold plums, dramatic burgundy, rich molten copper, and warm chocolate hues for high-contrast glam."
-        else:
-            return "For medium and olive skin tones, warm terracottas, spiced caramel nudes, and golden bronze highlighters enhance your natural warmth and radiance perfectly."
 
-    if "shoe" in msg_lower or "bag" in msg_lower or "accessory" in msg_lower:
-        return f"For a {occ or 'chic'} event, choose classic pointed-toe heels or metallic strappy sandals paired with a sleek structured clutch in a complementary neutral or metallic shade."
+    # 1. Men's Styling & Menswear
+    if any(k in msg_lower for k in ["male", "men", "man", "groom", "boy", "guy", "sherwani", "kurta", "waistcoat", "prince coat"]):
+        if any(k in msg_lower for k in ["wedding", "barat", "walima", "nikkah"]):
+            return (
+                "For a Pakistani wedding, gentlemen look distinguished in a tailored raw silk or velvet Sherwani in ivory, deep black, or midnight blue, paired with a matching churidar or straight trousers. "
+                "For a modern regal statement, add an embroidered shawl and classic velvet khussa shoes. A semi-formal option is an embroidered kurta with a structured jacquard waistcoat."
+            )
+        elif "mehndi" in msg_lower or "mayun" in msg_lower:
+            return (
+                "For Mehndi and Mayun events, vibrant kurtas in mustard yellow, olive green, burnt orange, or ivory paired with an embellished waistcoat make the perfect celebratory statement."
+            )
+        return (
+            "For men's eastern styling, structured kurtas in textured raw silk, cotton-silk, or linen paired with a tailored waistcoat or prince coat are versatile and elegant. "
+            "Pair with leather Peshawari chappals or velvet loafers to complete the look."
+        )
 
-    return f"To style your look beautifully for a {occ or 'special'} event, balance your {outfit_color or 'ensemble'} with harmonious jewelry and a glowing makeup finish. Let me know if you'd like advice on jewelry metals, lip shades, or styling rules!"
+    # 2. Bridal & Wedding Looks
+    if any(k in msg_lower for k in ["bridal", "bride", "lehenga", "barat", "walima", "nikkah"]):
+        if "walima" in msg_lower:
+            return (
+                "For a Walima ceremony, modern Pakistani brides favor opulent pastel maxis, peshwas, or soft metallic lehengas (champagne, blush, sage, or ice blue) "
+                "paired with sparkling diamond, zircon, or white gold polki jewellery and a soft luminous dewy glam finish."
+            )
+        return (
+            "For bridal glamour, traditional deep crimson, ruby, or jewel-toned velvet and raw silk lehengas heavily embellished with antique zardozi and kora dabka are timeless. "
+            "Coordinate with handcrafted 22K Kundan Matha Patti, chokers, and a bold velvet matte lip color."
+        )
+
+    # 3. Mehndi & Festive Celebrations
+    if any(k in msg_lower for k in ["mehndi", "mayun", "haldi", "festival", "eid"]):
+        return (
+            "For festive occasions and Mehndi nights, embrace joyful color-blocking like mustard with emerald, or hot pink with turquoise. "
+            "Style with traditional gota jewellery or antique brass jhumkas, a radiant warm bronzer, and a playful coral or peach lip."
+        )
+
+    # 4. Jewelry & Metal Guidance
+    if any(k in msg_lower for k in ["gold", "silver", "metal", "jewelry", "kundan", "polki", "choker", "earring", "chandbali"]):
+        if any(k in msg_lower for k in ["warm", "red", "gold", "yellow", "orange", "mustard", "rust"]):
+            return (
+                "Warm-toned outfits pair gorgeously with 22K yellow gold, heritage Kundan, and antique copper finishes. "
+                "A Kundan choker with pearl droppings or heavy filigree chandbalis will accentuate warm tones seamlessly."
+            )
+        elif any(k in msg_lower for k in ["cool", "blue", "navy", "silver", "grey", "white", "black"]):
+            return (
+                "Cool and deep jewel tones (navy, sapphire, black, emerald) achieve a striking, high-fashion contrast with rhodium-plated sterling silver, white gold, and platinum diamond tennis pieces."
+            )
+        else:
+            return (
+                "If your outfit has mixed metallic embroidery (tilla work with both silver and gold threads), you can effortlessly mix metals! "
+                "Try polki pieces set in champagne gold with pearl accents for the most harmonious balance."
+            )
+
+    # 5. Makeup & Lip Shade Recommendations
+    if any(k in msg_lower for k in ["lip", "makeup", "shade", "blush", "foundation", "eyeshadow", "highlighter"]):
+        if skin_tone.lower() == "fair":
+            return (
+                "With a fair skin tone, soft berry stains, petal roses, and warm peaches enhance your features naturally. "
+                "For eye makeup, soft champagne shimmer and subtle winged liner pair beautifully without overwhelming your complexion."
+            )
+        elif skin_tone.lower() == "dark":
+            return (
+                "Dusky and deep complexions radiate when paired with rich plums, spiced berries, chocolate nudes, and fiery ruby reds. "
+                "Accentuate with molten bronze highlighters and metallic copper eyeshadow for sensational glow."
+            )
+        else:
+            return (
+                "For wheatish and medium skin tones (typical in South Asia), warm terracottas, spiced caramel nudes, and brick reds look mesmerizing. "
+                "Golden hour palettes with bronze shimmer and warm peach blush bring out your natural golden undertones."
+            )
+
+    # 6. Shoes, Bags & Accessories
+    if any(k in msg_lower for k in ["shoe", "bag", "heel", "clutch", "purse", "khussa", "accessory"]):
+        return (
+            f"For an elegant {occ or 'formal'} ensemble, choose pointed metallic pumps, embellished strappy heels, or artisan-crafted Tilla khussas. "
+            "Pair with a sleek box clutch or traditional potli bag featuring matching embroidery."
+        )
+
+    # 7. Fabrics & Texture Styling
+    if any(k in msg_lower for k in ["velvet", "silk", "organza", "chiffon", "fabric"]):
+        return (
+            "Rich textures like micro-velvet and pure raw silk have a natural sheen that catches the light; pair them with subtle matte makeup and statement heirloom jewelry. "
+            "For airy sheer fabrics like organza and net, lighter pearl clusters and delicate layered necklaces preserve an ethereal vibe."
+        )
+
+    # 8. Conversational & General Greetings
+    if any(k in msg_lower for k in ["hi", "hello", "hey", "salam", "assalam", "good morning", "good evening"]):
+        return (
+            f"Salam and welcome to GlamIQ! I am your AI Virtual Stylist. How can I help curate your look today? "
+            f"Feel free to ask for Pakistani bridal advice, color matching, jewelry pairing, or makeup recommendations."
+        )
+
+    # 9. Dynamic Contextual Default
+    return (
+        f"For your {occ or 'upcoming'} look, balancing your {outfit_color or 'attire'} with the right accessories creates effortless poise. "
+        "Would you like recommendations on specific jewelry pieces (Kundan vs. Polki), complementary lip and eye shades, or footwear styling?"
+    )
 
 
 async def handle_chat_query(
@@ -134,52 +212,25 @@ async def handle_chat_query(
         try:
             nvidia_headers = {
                 "Authorization": f"Bearer {settings.NVIDIA_API_KEY}",
-                "Accept": "text/event-stream",
                 "Content-Type": "application/json",
             }
             nvidia_payload = {
                 "model": settings.NVIDIA_MODEL,
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": f"{system_prompt}\n\nUser Question: {user_message}"
-                            }
-                        ]
-                    }
-                ],
-                "max_tokens": 4096,
-                "temperature": 1.0,
-                "stream": True,
+                "messages": messages,
+                "max_tokens": 800,
+                "temperature": 0.7,
             }
-            async with httpx.AsyncClient(timeout=25.0) as http_client:
-                async with http_client.stream(
-                    "POST",
+            async with httpx.AsyncClient(timeout=15.0) as http_client:
+                response = await http_client.post(
                     settings.NVIDIA_API_URL,
                     headers=nvidia_headers,
                     json=nvidia_payload,
-                ) as response:
-                    if response.status_code == 200:
-                        accumulated = ""
-                        async for line in response.aiter_lines():
-                            if line and line.startswith("data: "):
-                                data_str = line[6:].strip()
-                                if data_str == "[DONE]":
-                                    break
-                                try:
-                                    chunk = json.loads(data_str)
-                                    delta = chunk["choices"][0].get("delta", {})
-                                    content = delta.get("content", "")
-                                    if content:
-                                        accumulated += content
-                                except Exception:
-                                    pass
-                        if accumulated.strip():
-                            bot_reply = accumulated.strip()
-                    else:
-                        print(f"[NVIDIA API Error] Status {response.status_code}")
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    bot_reply = data["choices"][0]["message"]["content"].strip()
+                else:
+                    print(f"[NVIDIA API Error] Status {response.status_code}: {response.text[:200]}")
         except Exception as e:
             print(f"[NVIDIA API Exception] {e}")
 

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import client from '../api/client';
@@ -74,6 +74,9 @@ export const PAKISTANI_DRESSES = [
 ];
 
 export default function Dresses() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const collectionParam = searchParams.get('collection') || 'all';
+
   const [selectedOccasion, setSelectedOccasion] = useState('all');
   const [selectedColor, setSelectedColor] = useState('all');
   const [stylingLoading, setStylingLoading] = useState(null);
@@ -82,6 +85,24 @@ export default function Dresses() {
   const navigate = useNavigate();
 
   const filteredDresses = PAKISTANI_DRESSES.filter((dress) => {
+    // Collection Filter
+    if (collectionParam === 'bridal') {
+      const isBridal =
+        dress.occasion.toLowerCase() === 'wedding' ||
+        dress.item_name.toLowerCase().includes('bridal') ||
+        dress.item_name.toLowerCase().includes('lehenga');
+      if (!isBridal) return false;
+    } else if (collectionParam === 'festive') {
+      const isFestive =
+        dress.occasion.toLowerCase() === 'festival' ||
+        dress.occasion.toLowerCase() === 'party' ||
+        dress.occasion.toLowerCase() === 'formal' ||
+        dress.item_name.toLowerCase().includes('velvet') ||
+        dress.item_name.toLowerCase().includes('kurti') ||
+        dress.item_name.toLowerCase().includes('peshwas');
+      if (!isFestive) return false;
+    }
+
     const matchOccasion = selectedOccasion === 'all' || dress.occasion.toLowerCase() === selectedOccasion.toLowerCase();
     const matchColor = selectedColor === 'all' || dress.color.toLowerCase().includes(selectedColor.toLowerCase());
     return matchOccasion && matchColor;
@@ -94,7 +115,6 @@ export default function Dresses() {
     }
     setStylingLoading(dress.id);
     try {
-      // In a live flow, we can trigger the AI suggestion for this dress color & style
       navigate(`/analyzer?color=${encodeURIComponent(dress.color)}&style=${dress.style_type}&img=${encodeURIComponent(dress.image_url)}`);
     } finally {
       setStylingLoading(null);
@@ -112,9 +132,61 @@ export default function Dresses() {
         <h1 style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 800, color: '#ffffff', fontFamily: 'var(--font-display)', marginBottom: '0.75rem' }}>
           Pakistani Bridal & <span className="gradient-text-italic">Festive Dresses</span>
         </h1>
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.05rem', maxWidth: '650px', margin: '0 auto' }}>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.05rem', maxWidth: '650px', margin: '0 auto 1.5rem' }}>
           Browse handcrafted lehengas, silk formals, and organza peshwas. Click <strong>"Style with AI"</strong> on any dress to get instant matched jewelry & makeup suggestions.
         </p>
+
+        {/* Collection Selector Tabs */}
+        <div style={{ display: 'inline-flex', gap: '0.5rem', background: 'rgba(36, 20, 42, 0.8)', padding: '0.4rem', borderRadius: 'var(--radius-pill)', border: '1px solid rgba(236, 72, 153, 0.25)', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <button
+            onClick={() => setSearchParams({})}
+            style={{
+              padding: '0.5rem 1.25rem',
+              borderRadius: 'var(--radius-pill)',
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              border: 'none',
+              background: collectionParam === 'all' ? 'linear-gradient(135deg, #ec4899, #be185d)' : 'transparent',
+              color: '#ffffff',
+              transition: 'all 0.2s',
+            }}
+          >
+            All Dresses
+          </button>
+          <button
+            onClick={() => setSearchParams({ collection: 'bridal' })}
+            style={{
+              padding: '0.5rem 1.25rem',
+              borderRadius: 'var(--radius-pill)',
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              border: 'none',
+              background: collectionParam === 'bridal' ? 'linear-gradient(135deg, #ec4899, #be185d)' : 'transparent',
+              color: '#ffffff',
+              transition: 'all 0.2s',
+            }}
+          >
+            👑 Pakistani Bridal Lehengas
+          </button>
+          <button
+            onClick={() => setSearchParams({ collection: 'festive' })}
+            style={{
+              padding: '0.5rem 1.25rem',
+              borderRadius: 'var(--radius-pill)',
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              border: 'none',
+              background: collectionParam === 'festive' ? 'linear-gradient(135deg, #ec4899, #be185d)' : 'transparent',
+              color: '#ffffff',
+              transition: 'all 0.2s',
+            }}
+          >
+            ✨ Festive & Velvet Formals
+          </button>
+        </div>
       </div>
 
       {/* Filter Pills */}

@@ -153,45 +153,93 @@ def generate_style_advice(
     style_type: Optional[str],
     occasion_name: Optional[str],
     skin_tone: Optional[str],
+    preferences: Optional[Dict[str, Any]] = None,
+    user_name: Optional[str] = None,
+    gender: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
-    Generate styling recommendation plan and human-readable explanation.
+    Generate styling recommendation plan and human-readable explanation,
+    personalized with the user's explicit styling DNA and preferences.
     """
+    prefs = preferences or {}
+    metal_pref = prefs.get("metal_preference", "").lower()
+    style_vibe = prefs.get("style_preference", "").lower()
+    favorite_colors = prefs.get("favorite_colors", "")
+
     color_family = classify_color_family(color_palette)
-    harmony = HARMONY_RULES.get(color_family, HARMONY_RULES["warm"])
+    harmony = HARMONY_RULES.get(color_family, HARMONY_RULES["warm"]).copy()
     
-    # Match occasion
+    # 1. Adapt metal keyword based on user preference if explicitly specified
+    metal_keyword = harmony["jewelry_tone_keyword"]
+    jewelry_metal = harmony["jewelry_metal"]
+    if metal_pref == "silver":
+        metal_keyword = "silver"
+        jewelry_metal = "Sterling Silver, Platinum & White Gold"
+    elif metal_pref == "gold":
+        metal_keyword = "gold"
+        jewelry_metal = "22K Kundan Gold, Antique Polki & Warm Copper"
+    elif metal_pref == "both":
+        jewelry_metal = "Dual-Tone Kundan & Champagne Gold with Silver Accents"
+
+    # 2. Match occasion
     occ_key = "casual"
     if occasion_name:
         for k in OCCASION_RULES.keys():
             if k in occasion_name.lower():
                 occ_key = k
                 break
-    occ_style = OCCASION_RULES.get(occ_key, OCCASION_RULES["casual"])
+    occ_style = OCCASION_RULES.get(occ_key, OCCASION_RULES["casual"]).copy()
 
-    # Skin tone info
+    # 3. Adapt occasion style if user has a specific style vibe preference
+    if style_vibe == "minimalist":
+        occ_style["jewelry_style"] = "Delicate geometric studs, sleek chains, and whisper-thin bangles"
+        occ_style["vibe"] = "Minimalist & Effortless"
+    elif style_vibe == "statement":
+        occ_style["jewelry_style"] = "Opulent oversized chandelier earrings, multi-strand kundan choker, and ornate cuffs"
+        occ_style["vibe"] = "Dramatic & High-Impact Glamour"
+    elif style_vibe == "classic":
+        occ_style["jewelry_style"] = "Heirloom polki necklace, heritage jhumkas, and timeless pearl malas"
+        occ_style["vibe"] = "Classic Regal Tradition"
+    elif style_vibe == "modern":
+        occ_style["jewelry_style"] = "Contemporary ear cuffs, sculptural collars, and stacked modern rings"
+        occ_style["vibe"] = "Modern High-Fashion Edge"
+
+    # 4. Skin tone info
     skin_info = None
     if skin_tone and skin_tone.lower() in SKIN_TONE_MODIFIERS:
         skin_info = SKIN_TONE_MODIFIERS[skin_tone.lower()]
 
     # Construct jewelry and makeup suggestions
-    jewelry_suggestion = f"{harmony['jewelry_metal']} — {occ_style['jewelry_style']} ({occ_style['vibe']})"
+    jewelry_suggestion = f"{jewelry_metal} — {occ_style['jewelry_style']} ({occ_style['vibe']})"
     makeup_suggestion = f"{harmony['makeup_palette']} with {occ_style['makeup_finish']}"
 
-    # Build concise, articulated explanation
+    # 5. Build bespoke articulated explanation
     reasons = []
-    reasons.append(harmony["rule_reason"])
-    reasons.append(f"For a {occasion_name or 'special'} occasion, {occ_style['jewelry_style'].lower()} brings the desired {occ_style['vibe'].lower()} presence.")
+    salutation = f"For {user_name.split()[0]}, " if user_name else "For this ensemble, "
+    
+    if metal_pref in ("silver", "gold", "both"):
+        reasons.append(f"{salutation}honoring your preference for {metal_pref} tones, {harmony['rule_reason'].lower()}")
+    else:
+        reasons.append(f"{salutation}{harmony['rule_reason']}")
+
+    reasons.append(
+        f"For a {occasion_name or 'festive'} occasion, choosing {occ_style['jewelry_style'].lower()} creates a balanced, {occ_style['vibe'].lower()} aesthetic."
+    )
     
     if skin_info:
-        reasons.append(f"Complementing your {skin_tone} skin tone, we selected {skin_info['lip_tweak']} with {skin_info['highlight']}. {skin_info['advice']}")
+        reasons.append(
+            f"Tailored to your {skin_tone} complexion, we highlighted {skin_info['lip_tweak']} and {skin_info['highlight']}."
+        )
+
+    if favorite_colors:
+        reasons.append(f"Subtle accents harmonizing with your favored shades ({favorite_colors}) elevate the entire look.")
 
     explanation = " ".join(reasons)
 
     return {
         "color_family": color_family,
         "color_harmony": harmony["color_harmony"],
-        "jewelry_metal_keyword": harmony["jewelry_tone_keyword"],
+        "jewelry_metal_keyword": metal_keyword,
         "jewelry_suggestion": jewelry_suggestion,
         "makeup_suggestion": makeup_suggestion,
         "target_makeup_shades": harmony["makeup_shades"],

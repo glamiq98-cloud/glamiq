@@ -15,6 +15,7 @@ export default function Navbar() {
     { name: 'Jewellery', path: '/jewellery' },
     { name: 'Makeup', path: '/makeup' },
     { name: 'Dress Analyzer', path: '/analyzer' },
+    { name: 'Wardrobe', path: '/outfits' },
     { name: 'AI Stylist', path: '/stylist' },
   ];
 

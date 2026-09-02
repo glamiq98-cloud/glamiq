@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 
 export const PAKISTANI_JEWELLERY = [
@@ -77,11 +78,34 @@ export const PAKISTANI_JEWELLERY = [
 ];
 
 export default function Jewellery() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const collectionParam = searchParams.get('collection') || 'all';
+
   const [selectedTone, setSelectedTone] = useState('all');
   const { addToCart } = useCart();
   const [addedItem, setAddedItem] = useState(null);
 
   const filteredJewellery = PAKISTANI_JEWELLERY.filter((item) => {
+    // Collection Filter
+    if (collectionParam === 'kundan') {
+      const isKundan =
+        item.color.toLowerCase().includes('kundan') ||
+        item.item_name.toLowerCase().includes('kundan') ||
+        item.item_name.toLowerCase().includes('polki') ||
+        item.item_name.toLowerCase().includes('choker') ||
+        item.item_name.toLowerCase().includes('necklace') ||
+        item.item_name.toLowerCase().includes('bangle');
+      if (!isKundan) return false;
+    } else if (collectionParam === 'chandbali') {
+      const isChandbali =
+        item.item_name.toLowerCase().includes('chandbali') ||
+        item.item_name.toLowerCase().includes('matha patti') ||
+        item.item_name.toLowerCase().includes('jhumar') ||
+        item.item_name.toLowerCase().includes('earring') ||
+        item.item_name.toLowerCase().includes('chandelier');
+      if (!isChandbali) return false;
+    }
+
     if (selectedTone === 'all') return true;
     return item.color.toLowerCase().includes(selectedTone.toLowerCase());
   });
@@ -103,9 +127,61 @@ export default function Jewellery() {
         <h1 style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 800, color: '#ffffff', fontFamily: 'var(--font-display)', marginBottom: '0.75rem' }}>
           Kundan & Polki <span className="gradient-text-gold">Heritage Jewellery</span>
         </h1>
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.05rem', maxWidth: '650px', margin: '0 auto' }}>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.05rem', maxWidth: '650px', margin: '0 auto 1.5rem' }}>
           Handcrafted by master Lahore & Karachi artisans. Designed to harmonize seamlessly with Pakistani bridal wear and festive luxury pret.
         </p>
+
+        {/* Collection Selector Tabs */}
+        <div style={{ display: 'inline-flex', gap: '0.5rem', background: 'rgba(36, 20, 42, 0.8)', padding: '0.4rem', borderRadius: 'var(--radius-pill)', border: '1px solid rgba(212, 175, 55, 0.3)', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <button
+            onClick={() => setSearchParams({})}
+            style={{
+              padding: '0.5rem 1.25rem',
+              borderRadius: 'var(--radius-pill)',
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              border: 'none',
+              background: collectionParam === 'all' ? 'linear-gradient(135deg, #e5c88f, #d4af37)' : 'transparent',
+              color: collectionParam === 'all' ? '#0c070e' : '#ffffff',
+              transition: 'all 0.2s',
+            }}
+          >
+            All Jewellery
+          </button>
+          <button
+            onClick={() => setSearchParams({ collection: 'kundan' })}
+            style={{
+              padding: '0.5rem 1.25rem',
+              borderRadius: 'var(--radius-pill)',
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              border: 'none',
+              background: collectionParam === 'kundan' ? 'linear-gradient(135deg, #e5c88f, #d4af37)' : 'transparent',
+              color: collectionParam === 'kundan' ? '#0c070e' : '#ffffff',
+              transition: 'all 0.2s',
+            }}
+          >
+            👑 Heritage Kundans & Sets
+          </button>
+          <button
+            onClick={() => setSearchParams({ collection: 'chandbali' })}
+            style={{
+              padding: '0.5rem 1.25rem',
+              borderRadius: 'var(--radius-pill)',
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              border: 'none',
+              background: collectionParam === 'chandbali' ? 'linear-gradient(135deg, #e5c88f, #d4af37)' : 'transparent',
+              color: collectionParam === 'chandbali' ? '#0c070e' : '#ffffff',
+              transition: 'all 0.2s',
+            }}
+          >
+            🌙 Chandbalis & Matha Patti
+          </button>
+        </div>
       </div>
 
       {/* Filter Tabs */}
