@@ -1,0 +1,18 @@
+[Unit]
+Description=GlamIQ FastAPI Uvicorn Backend Service
+After=network.target postgresql.service
+
+[Service]
+User=root
+WorkingDirectory=/var/www/glamiq/backend
+EnvironmentFile=/var/www/glamiq/backend/.env
+ExecStart=/var/www/glamiq/backend/venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8001
+Restart=always
+RestartSec=3
+KillSignal=SIGQUIT
+Type=simple
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
