@@ -13,6 +13,7 @@ from app.services.auth_service import decode_token
 
 # OAuth2 scheme — looks for "Authorization: Bearer <token>" header
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 
 
 async def get_db() -> AsyncSession:  # type: ignore
@@ -41,3 +42,21 @@ async def get_current_user(
             detail="User not found",
         )
     return user
+
+
+async def get_optional_user(
+    token: str | None = Depends(oauth2_scheme_optional),
+    db: AsyncSession = Depends(get_db),
+) -> User | None:
+    """
+    Extract Bearer token if provided, but return None instead of 401 for guests.
+    """
+    if not token:
+        return None
+    try:
+        payload = decode_token(token, expected_type="access")
+        user_id = int(payload["sub"])
+        result = await db.execute(select(User).where(User.user_id == user_id))
+        return result.scalar_one_or_none()
+    except Exception:
+        return None

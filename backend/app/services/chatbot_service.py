@@ -138,7 +138,7 @@ def _generate_fallback_response(user_msg: str, skin_tone: str, outfit_color: str
 
 
 async def handle_chat_query(
-    user: User,
+    user: Optional[User],
     user_message: str,
     db: AsyncSession,
 ) -> str:
@@ -147,36 +147,38 @@ async def handle_chat_query(
     and record the conversation.
     """
     # 1. Gather live styling context
+    user_name = user.full_name if user else "Fashion Lover"
+    skin_tone = (user.skin_tone if user else None) or "medium"
     recent_outfit_desc = "None uploaded yet"
     recent_occasion_desc = "General"
     color_palette = "Not specified"
 
-    outfit_res = await db.execute(
-        select(Outfit)
-        .where(Outfit.user_id == user.user_id)
-        .order_by(desc(Outfit.uploaded_at))
-        .limit(1)
-    )
-    latest_outfit = outfit_res.scalar_one_or_none()
-    if latest_outfit:
-        recent_outfit_desc = f"{latest_outfit.style_type or 'outfit'} in {latest_outfit.color_palette or 'selected color'}"
-        color_palette = latest_outfit.color_palette or "custom"
-        if latest_outfit.occasion_id:
-            occ_res = await db.execute(
-                select(Occasion).where(Occasion.occasion_id == latest_outfit.occasion_id)
-            )
-            occ = occ_res.scalar_one_or_none()
-            if occ:
-                recent_occasion_desc = occ.occasion_name
+    if user:
+        outfit_res = await db.execute(
+            select(Outfit)
+            .where(Outfit.user_id == user.user_id)
+            .order_by(desc(Outfit.uploaded_at))
+            .limit(1)
+        )
+        latest_outfit = outfit_res.scalar_one_or_none()
+        if latest_outfit:
+            recent_outfit_desc = f"{latest_outfit.style_type or 'outfit'} in {latest_outfit.color_palette or 'selected color'}"
+            color_palette = latest_outfit.color_palette or "custom"
+            if latest_outfit.occasion_id:
+                occ_res = await db.execute(
+                    select(Occasion).where(Occasion.occasion_id == latest_outfit.occasion_id)
+                )
+                occ = occ_res.scalar_one_or_none()
+                if occ:
+                    recent_occasion_desc = occ.occasion_name
 
-    prefs = user.preferences or {}
+    prefs = (user.preferences if user else {}) or {}
     metal_pref = prefs.get("metal_preference", "gold & silver")
     style_vibe = prefs.get("style_preference", "modern")
-    skin_tone = user.skin_tone or "medium"
 
     # 2. Build system prompt with live context
     system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
-        user_name=user.full_name,
+        user_name=user_name,
         skin_tone=skin_tone,
         metal_pref=metal_pref,
         style_vibe=style_vibe,
@@ -186,13 +188,15 @@ async def handle_chat_query(
     )
 
     # 3. Retrieve recent chat history (last 6 messages)
-    history_res = await db.execute(
-        select(ChatHistory)
-        .where(ChatHistory.user_id == user.user_id)
-        .order_by(desc(ChatHistory.timestamp))
-        .limit(6)
-    )
-    past_chats = list(reversed(history_res.scalars().all()))
+    past_chats = []
+    if user:
+        history_res = await db.execute(
+            select(ChatHistory)
+            .where(ChatHistory.user_id == user.user_id)
+            .order_by(desc(ChatHistory.timestamp))
+            .limit(6)
+        )
+        past_chats = list(reversed(history_res.scalars().all()))
 
     messages = [{"role": "system", "content": system_prompt}]
     for c in past_chats:
@@ -266,13 +270,14 @@ async def handle_chat_query(
             occ=recent_occasion_desc,
         )
 
-    # 7. Persist interaction in chat_history
-    record = ChatHistory(
-        user_id=user.user_id,
-        user_message=user_message,
-        bot_response=bot_reply,
-    )
-    db.add(record)
-    await db.flush()
+    # 7. Persist interaction in chat_history (if authenticated)
+    if user:
+        record = ChatHistory(
+            user_id=user.user_id,
+            user_message=user_message,
+            bot_response=bot_reply,
+        )
+        db.add(record)
+        await db.flush()
 
     return bot_reply
