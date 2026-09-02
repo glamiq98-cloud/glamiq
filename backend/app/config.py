@@ -23,7 +23,7 @@ class Settings(BaseSettings):
 
     # ── AI Providers (NVIDIA NIM / OpenAI) ───────────────────
     OPENAI_API_KEY: str = ""
-    NVIDIA_API_KEY: str = "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"
+    NVIDIA_API_KEY: str = ""
     NVIDIA_API_URL: str = "https://integrate.api.nvidia.com/v1/chat/completions"
     NVIDIA_MODEL: str = "meta/llama-3.2-11b-vision-instruct"
 
