@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
+import client from '../api/client';
 
 export const PAKISTANI_JEWELLERY = [
   {
@@ -85,7 +86,30 @@ export default function Jewellery() {
   const { addToCart } = useCart();
   const [addedItem, setAddedItem] = useState(null);
 
-  const filteredJewellery = PAKISTANI_JEWELLERY.filter((item) => {
+  const [jewellery, setJewellery] = useState(PAKISTANI_JEWELLERY);
+
+  useEffect(() => {
+    const fetchJewellery = async () => {
+      try {
+        const res = await client.get('/catalog/items?category=jewelry');
+        const apiJewellery = res.data.map(item => ({
+          item_id: item.item_id,
+          item_name: item.item_name,
+          category: item.category,
+          color: item.color || 'Custom',
+          price: item.price || 0,
+          image_url: item.image_url,
+          description: item.description || '',
+        }));
+        setJewellery([...apiJewellery, ...PAKISTANI_JEWELLERY]);
+      } catch (err) {
+        console.error('Failed to fetch jewellery catalog:', err);
+      }
+    };
+    fetchJewellery();
+  }, []);
+
+  const filteredJewellery = jewellery.filter((item) => {
     // Collection Filter
     if (collectionParam === 'kundan') {
       const isKundan =

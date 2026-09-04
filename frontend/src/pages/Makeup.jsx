@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
+import client from '../api/client';
 
 export const PAKISTANI_MAKEUP = [
   {
@@ -93,7 +94,31 @@ export default function Makeup() {
   const { addToCart } = useCart();
   const [addedItem, setAddedItem] = useState(null);
 
-  const filteredMakeup = PAKISTANI_MAKEUP.filter((item) => {
+  const [makeup, setMakeup] = useState(PAKISTANI_MAKEUP);
+
+  useEffect(() => {
+    const fetchMakeup = async () => {
+      try {
+        const res = await client.get('/catalog/items?category=makeup');
+        const apiMakeup = res.data.map(item => ({
+          item_id: item.item_id,
+          item_name: item.item_name,
+          category: item.category,
+          color: item.color || 'Custom',
+          undertone: 'Universal / All', // Missing in DB, provide default
+          price: item.price || 0,
+          image_url: item.image_url,
+          description: item.description || '',
+        }));
+        setMakeup([...apiMakeup, ...PAKISTANI_MAKEUP]);
+      } catch (err) {
+        console.error('Failed to fetch makeup catalog:', err);
+      }
+    };
+    fetchMakeup();
+  }, []);
+
+  const filteredMakeup = makeup.filter((item) => {
     // Collection Filter
     if (collectionParam === 'lips') {
       const isLip =

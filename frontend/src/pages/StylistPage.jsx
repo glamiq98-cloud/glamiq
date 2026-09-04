@@ -22,6 +22,26 @@ export default function StylistPage() {
     "✨ Should I wear Kundan or Silver with a royal blue formal suit?",
   ];
 
+  // Synchronize chat history when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      client.get('/chatbot/history')
+        .then((res) => {
+          if (res.data?.messages && res.data.messages.length > 0) {
+            const formatted = [];
+            res.data.messages.forEach((m) => {
+              if (m.user_message) formatted.push({ role: 'user', content: m.user_message });
+              if (m.bot_response) formatted.push({ role: 'assistant', content: m.bot_response });
+            });
+            setMessages(formatted);
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to load chat history:', err);
+        });
+    }
+  }, [isAuthenticated]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
@@ -36,30 +56,15 @@ export default function StylistPage() {
     setLoading(true);
 
     try {
-      if (isAuthenticated) {
-        const res = await client.post('/chat/query', { query: text.trim() });
-        setMessages((prev) => [...prev, { role: 'assistant', content: res.data.response }]);
-      } else {
-        // Guest mode styling response
-        setTimeout(() => {
-          setMessages((prev) => [
-            ...prev,
-            {
-              role: 'assistant',
-              content: 'For warm tones like red, coral, and mustard, luminous 22K Kundan gold with meenakari reverse detailing creates royal presence. Pair with soft terracotta lips and golden bronze highlighters for a stunning look!',
-            },
-          ]);
-          setLoading(false);
-        }, 1000);
-        return;
-      }
+      const res = await client.post('/chatbot/query', { message: text.trim() });
+      setMessages((prev) => [...prev, { role: 'assistant', content: res.data.bot_response }]);
     } catch (err) {
-      console.error(err);
+      console.error('Chatbot query error:', err);
       setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
-          content: 'For classic Pakistani festive outfits, gold & warm copper jewelry with terracotta/coral lips creates timeless elegance!',
+          content: 'Having a brief moment of connection delay — please feel free to try asking again!',
         },
       ]);
     } finally {

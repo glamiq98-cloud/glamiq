@@ -16,6 +16,9 @@ class FashionItem(Base):
     price: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
     image_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="pending")
+    description: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    style_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    occasion: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     __table_args__ = (
         CheckConstraint(

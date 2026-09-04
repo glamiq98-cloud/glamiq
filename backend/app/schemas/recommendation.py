@@ -13,6 +13,9 @@ class FashionItemResponse(BaseModel):
     price: Optional[float] = None
     image_url: Optional[str] = None
     status: str
+    description: Optional[str] = None
+    style_type: Optional[str] = None
+    occasion: Optional[str] = None
 
     model_config = {"from_attributes": True}
 

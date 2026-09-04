@@ -16,6 +16,7 @@ from app.routers import occasions as occasions_router
 from app.routers import recommendations as recommendations_router
 from app.routers import chatbot as chatbot_router
 from app.routers import admin as admin_router
+from app.routers import catalog as catalog_router
 
 app = FastAPI(
     title="Glam IQ API",
@@ -46,6 +47,7 @@ app.include_router(occasions_router.router)
 app.include_router(recommendations_router.router)
 app.include_router(chatbot_router.router)
 app.include_router(admin_router.router)
+app.include_router(catalog_router.router)
 
 
 @app.get("/", tags=["Health"])

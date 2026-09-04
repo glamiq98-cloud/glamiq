@@ -28,6 +28,9 @@ export default function AdminDashboard() {
     price: 99.0,
     image_url: '',
     status: 'approved',
+    description: '',
+    style_type: '',
+    occasion: '',
   });
   const [submittingProduct, setSubmittingProduct] = useState(false);
   const [actionMessage, setActionMessage] = useState('');
@@ -141,6 +144,9 @@ export default function AdminDashboard() {
         price: 99.0,
         image_url: '',
         status: 'approved',
+        description: '',
+        style_type: '',
+        occasion: '',
       });
       setActionMessage('New product added to catalog with uploaded image! ✨');
       setTimeout(() => setActionMessage(''), 3000);
@@ -601,6 +607,50 @@ export default function AdminDashboard() {
                     style={{ width: '100%' }}
                   />
                 </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>
+                    Style Type
+                  </label>
+                  <input
+                    type="text"
+                    value={newProduct.style_type}
+                    onChange={(e) => setNewProduct({ ...newProduct, style_type: e.target.value })}
+                    placeholder="e.g. formal, casual"
+                    className="input"
+                    style={{ width: '100%' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>
+                    Occasion
+                  </label>
+                  <input
+                    type="text"
+                    value={newProduct.occasion}
+                    onChange={(e) => setNewProduct({ ...newProduct, occasion: e.target.value })}
+                    placeholder="e.g. Wedding, Party"
+                    className="input"
+                    style={{ width: '100%' }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>
+                  Description
+                </label>
+                <textarea
+                  value={newProduct.description}
+                  onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                  placeholder="Enter product description"
+                  className="input"
+                  rows="3"
+                  style={{ width: '100%', resize: 'vertical' }}
+                />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>

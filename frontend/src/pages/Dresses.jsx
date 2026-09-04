@@ -84,7 +84,32 @@ export default function Dresses() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  const filteredDresses = PAKISTANI_DRESSES.filter((dress) => {
+  const [dresses, setDresses] = useState(PAKISTANI_DRESSES);
+
+  useEffect(() => {
+    const fetchDresses = async () => {
+      try {
+        const res = await client.get('/catalog/items?category=dress');
+        const apiDresses = res.data.map(item => ({
+          id: item.item_id.toString(),
+          item_name: item.item_name,
+          category: item.category,
+          style_type: item.style_type || 'formal',
+          occasion: item.occasion || 'Formal',
+          color: item.color || 'Custom',
+          price: item.price || 0,
+          image_url: item.image_url,
+          description: item.description || '',
+        }));
+        setDresses([...apiDresses, ...PAKISTANI_DRESSES]);
+      } catch (err) {
+        console.error('Failed to fetch dresses catalog:', err);
+      }
+    };
+    fetchDresses();
+  }, []);
+
+  const filteredDresses = dresses.filter((dress) => {
     // Collection Filter
     if (collectionParam === 'bridal') {
       const isBridal =

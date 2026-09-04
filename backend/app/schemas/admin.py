@@ -37,6 +37,9 @@ class AdminProductCreateRequest(BaseModel):
     price: Optional[float] = None
     image_url: Optional[str] = None
     status: str = Field("approved", pattern=r"^(pending|approved|rejected)$")
+    description: Optional[str] = None
+    style_type: Optional[str] = None
+    occasion: Optional[str] = None
 
 
 class AdminProductUpdateRequest(BaseModel):
@@ -46,6 +49,9 @@ class AdminProductUpdateRequest(BaseModel):
     price: Optional[float] = None
     image_url: Optional[str] = None
     status: Optional[str] = None
+    description: Optional[str] = None
+    style_type: Optional[str] = None
+    occasion: Optional[str] = None
 
 
 class AdminStatsResponse(BaseModel):
