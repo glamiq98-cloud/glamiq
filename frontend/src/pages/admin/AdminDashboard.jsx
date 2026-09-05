@@ -35,6 +35,11 @@ export default function AdminDashboard() {
   const [submittingProduct, setSubmittingProduct] = useState(false);
   const [actionMessage, setActionMessage] = useState('');
 
+  // Edit Product Modal
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [submittingEdit, setSubmittingEdit] = useState(false);
+
   useEffect(() => {
     const token = sessionStorage.getItem('admin_token');
     const username = sessionStorage.getItem('admin_username');
@@ -154,6 +159,58 @@ export default function AdminDashboard() {
       alert(err.response?.data?.detail || 'Failed to add product');
     } finally {
       setSubmittingProduct(false);
+    }
+  };
+
+  const handleEditClick = (product) => {
+    setEditingProduct({
+      item_id: product.item_id,
+      item_name: product.item_name || '',
+      category: product.category || 'jewelry',
+      color: product.color || '',
+      price: product.price || 0,
+      image_url: product.image_url || '',
+      status: product.status || 'pending',
+      description: product.description || '',
+      style_type: product.style_type || '',
+      occasion: product.occasion || '',
+    });
+    setImagePreview(product.image_url || '');
+    setProductImageFile(null);
+    setShowEditModal(true);
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    setSubmittingEdit(true);
+    try {
+      let finalImageUrl = editingProduct.image_url;
+
+      if (productImageFile) {
+        const formData = new FormData();
+        formData.append('file', productImageFile);
+        const uploadRes = await client.post('/admin/products/upload-image', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        finalImageUrl = uploadRes.data.image_url;
+      }
+
+      const payload = { ...editingProduct, image_url: finalImageUrl };
+      delete payload.item_id;
+
+      const res = await client.put(`/admin/products/${editingProduct.item_id}`, payload);
+      setProducts((prev) => prev.map((p) => (p.item_id === editingProduct.item_id ? res.data : p)));
+      
+      setShowEditModal(false);
+      setEditingProduct(null);
+      setProductImageFile(null);
+      setImagePreview('');
+      setActionMessage('Product updated successfully! ✨');
+      setTimeout(() => setActionMessage(''), 3000);
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Failed to update product');
+    } finally {
+      setSubmittingEdit(false);
     }
   };
 
@@ -437,6 +494,20 @@ export default function AdminDashboard() {
                             Reject
                           </button>
                         )}
+                        <button
+                          onClick={() => handleEditClick(item)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: 'var(--color-primary-light)',
+                            padding: '0.3rem',
+                            fontSize: '0.9rem',
+                          }}
+                          title="Edit"
+                        >
+                          ✏️
+                        </button>
                         <button
                           onClick={() => handleDeleteProduct(item.item_id)}
                           style={{
@@ -756,6 +827,230 @@ export default function AdminDashboard() {
                   style={{ flex: 1.5, justifyContent: 'center' }}
                 >
                   {submittingProduct ? 'Saving...' : 'Add Item'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Product Modal */}
+      {showEditModal && editingProduct && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 200,
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.5rem',
+          }}
+        >
+          <div
+            className="card animate-scale-in"
+            style={{ width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 700 }}>Edit Fashion Catalog Item</h2>
+              <button
+                onClick={() => setShowEditModal(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)', fontSize: '1.5rem', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>
+                  Item Title / Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editingProduct.item_name}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, item_name: e.target.value })}
+                  className="input"
+                  style={{ width: '100%' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>
+                    Category
+                  </label>
+                  <select
+                    value={editingProduct.category}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
+                    className="input"
+                    style={{ width: '100%' }}
+                  >
+                    <option value="jewelry">Jewelry</option>
+                    <option value="makeup">Makeup</option>
+                    <option value="dress">Dress</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>
+                    Tone / Color
+                  </label>
+                  <input
+                    type="text"
+                    value={editingProduct.color}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, color: e.target.value })}
+                    className="input"
+                    style={{ width: '100%' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>
+                    Style Type
+                  </label>
+                  <input
+                    type="text"
+                    value={editingProduct.style_type}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, style_type: e.target.value })}
+                    className="input"
+                    style={{ width: '100%' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>
+                    Occasion
+                  </label>
+                  <input
+                    type="text"
+                    value={editingProduct.occasion}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, occasion: e.target.value })}
+                    className="input"
+                    style={{ width: '100%' }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>
+                  Description
+                </label>
+                <textarea
+                  value={editingProduct.description}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
+                  className="input"
+                  rows="3"
+                  style={{ width: '100%', resize: 'vertical' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>
+                    Price (USD)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={editingProduct.price}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) || 0 })}
+                    className="input"
+                    style={{ width: '100%' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>
+                    Status
+                  </label>
+                  <select
+                    value={editingProduct.status}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, status: e.target.value })}
+                    className="input"
+                    style={{ width: '100%' }}
+                  >
+                    <option value="approved">Approved</option>
+                    <option value="pending">Pending</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>
+                  Update Product Image
+                </label>
+                
+                <div
+                  style={{
+                    border: '2px dashed rgba(236, 72, 153, 0.4)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '1.25rem',
+                    textAlign: 'center',
+                    background: 'rgba(36, 20, 42, 0.5)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                  }}
+                  onClick={() => document.getElementById('admin-edit-product-file-input')?.click()}
+                >
+                  <input
+                    id="admin-edit-product-file-input"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    style={{ display: 'none' }}
+                  />
+
+                  {imagePreview ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        style={{
+                          width: '120px',
+                          height: '120px',
+                          borderRadius: 'var(--radius-md)',
+                          objectFit: 'cover',
+                          border: '2px solid #ec4899',
+                        }}
+                      />
+                      <span style={{ fontSize: '0.8rem', color: '#f472b6', fontWeight: 600 }}>
+                        ✓ Image Selected (Click to change)
+                      </span>
+                    </div>
+                  ) : (
+                    <div>
+                      <span style={{ fontSize: '2rem', display: 'block', marginBottom: '0.5rem' }}>📁</span>
+                      <p style={{ fontSize: '0.9rem', fontWeight: 600, color: '#ffffff', marginBottom: '0.25rem' }}>
+                        Click to Choose New Image
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="btn btn-secondary"
+                  style={{ flex: 1 }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingEdit}
+                  className="btn btn-primary"
+                  style={{ flex: 1.5, justifyContent: 'center' }}
+                >
+                  {submittingEdit ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </form>

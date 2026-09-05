@@ -15,7 +15,7 @@ from app.models.admin import Admin
 from app.models.user import User
 from app.models.outfit import Outfit
 from app.models.fashion_item import FashionItem
-from app.models.recommendation import Recommendation
+from app.models.recommendation import Recommendation, recommendation_items
 from app.models.chat import ChatHistory
 from app.services.auth_service import hash_password, verify_password, create_access_token
 from app.schemas.admin import (
@@ -157,9 +157,12 @@ async def create_product(body: AdminProductCreateRequest, db: AsyncSession = Dep
         price=body.price,
         image_url=body.image_url,
         status=body.status,
+        description=body.description,
+        style_type=body.style_type,
+        occasion=body.occasion,
     )
     db.add(item)
-    await db.flush()
+    await db.commit()
     await db.refresh(item)
     return item
 
@@ -180,7 +183,7 @@ async def update_product(
     for field, val in update_data.items():
         setattr(item, field, val)
 
-    await db.flush()
+    await db.commit()
     await db.refresh(item)
     return item
 
@@ -193,7 +196,12 @@ async def delete_product(item_id: int, db: AsyncSession = Depends(get_db)):
     if not item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
 
+    # Clear references in many-to-many table first
+    await db.execute(delete(recommendation_items).where(recommendation_items.c.item_id == item_id))
+    
     await db.delete(item)
+    await db.commit()
+    
     return {"message": f"Product '{item.item_name}' deleted successfully"}
 
 
