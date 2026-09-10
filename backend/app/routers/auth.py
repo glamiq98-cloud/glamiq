@@ -86,7 +86,7 @@ async def login(
         )
 
     access_token = create_access_token(user.user_id)
-    refresh_token = create_refresh_token(user.user_id)
+    refresh_token = create_refresh_token(user.user_id, token_version=user.token_version)
 
     _set_refresh_cookie(response, refresh_token)
 
@@ -118,17 +118,44 @@ async def refresh(request: Request, response: Response, db: AsyncSession = Depen
             detail="User not found",
         )
 
+    # Validate token_version to ensure it hasn't been revoked
+    token_version = payload.get("version")
+    if token_version != user.token_version:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has been revoked",
+        )
+
     # Issue new tokens (rotate refresh token too)
     new_access_token = create_access_token(user.user_id)
-    new_refresh_token = create_refresh_token(user.user_id)
+    new_refresh_token = create_refresh_token(user.user_id, token_version=user.token_version)
     _set_refresh_cookie(response, new_refresh_token)
 
     return TokenResponse(access_token=new_access_token)
 
 
 @router.post("/logout", response_model=MessageResponse)
-async def logout(response: Response):
-    """Clear the refresh token cookie."""
+async def logout(
+    request: Request, 
+    response: Response, 
+    db: AsyncSession = Depends(get_db)
+):
+    """Clear the refresh token cookie and invalidate all active sessions for user."""
+    # Attempt to extract user to invalidate token_version
+    refresh_token = request.cookies.get(REFRESH_COOKIE_KEY)
+    if refresh_token:
+        try:
+            payload = decode_token(refresh_token, expected_type="refresh")
+            user_id = int(payload["sub"])
+            result = await db.execute(select(User).where(User.user_id == user_id))
+            user = result.scalar_one_or_none()
+            if user:
+                # Increment token_version to invalidate all existing refresh tokens
+                user.token_version += 1
+                await db.commit()
+        except Exception:
+            pass # Even if token invalid, proceed with clearing cookie
+
     response.delete_cookie(
         key=REFRESH_COOKIE_KEY,
         path="/",

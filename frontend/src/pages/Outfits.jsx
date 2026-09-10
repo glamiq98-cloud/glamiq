@@ -92,6 +92,19 @@ export default function Outfits() {
     }
   };
 
+  const handleDeleteOutfit = async (outfitId) => {
+    if (!window.confirm('Are you sure you want to delete this outfit? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      await client.delete(`/outfits/${outfitId}`);
+      setOutfits((prev) => prev.filter((o) => o.outfit_id !== outfitId));
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Failed to delete outfit.');
+    }
+  };
+
   const styleTypes = [
     { id: 'casual', label: 'Casual', emoji: '👕' },
     { id: 'formal', label: 'Formal', emoji: '👔' },
@@ -275,6 +288,44 @@ export default function Outfits() {
                     {outfit.occasion_name}
                   </span>
                 )}
+                
+                {/* Delete Button overlay */}
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleDeleteOutfit(outfit.outfit_id);
+                  }}
+                  style={{
+                    position: 'absolute',
+                    top: '12px',
+                    right: '12px',
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: 'rgba(0, 0, 0, 0.6)',
+                    backdropFilter: 'blur(4px)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    color: '#ff4d4d',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    fontSize: '1rem',
+                    transition: 'all 0.2s',
+                  }}
+                  title="Delete Outfit"
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.9)';
+                    e.currentTarget.style.color = '#FFF';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(0, 0, 0, 0.6)';
+                    e.currentTarget.style.color = '#ff4d4d';
+                  }}
+                >
+                  ✕
+                </button>
               </div>
 
               {/* Details & Action */}

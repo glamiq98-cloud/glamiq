@@ -3,89 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import client from '../api/client';
 
-export const PAKISTANI_MAKEUP = [
-  {
-    item_id: 201,
-    item_name: 'Velvet Matte Lip Color in Spiced Terracotta',
-    category: 'makeup',
-    color: 'Terracotta',
-    undertone: 'Medium / Warm',
-    price: 4500,
-    image_url: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=600&q=80',
-    description: '16-hour long-wear smudge-proof velvety liquid matte lipstick enriched with jojoba oil. Complements mustard, gold, and warm green outfits.',
-  },
-  {
-    item_id: 202,
-    item_name: 'Royal Crimson Red Velvet Bridal Lip Stain',
-    category: 'makeup',
-    color: 'Red',
-    undertone: 'Universal / All',
-    price: 4800,
-    image_url: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=600&q=80',
-    description: 'Iconic Pakistani bride bold ruby crimson lip pigment with aTransfer-resistant soft cushion matte finish.',
-  },
-  {
-    item_id: 203,
-    item_name: 'Golden Hour Warm Sunset Eyeshadow Palette (16 Shades)',
-    category: 'makeup',
-    color: 'Copper & Gold',
-    undertone: 'Warm / Golden',
-    price: 8500,
-    image_url: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=600&q=80',
-    description: 'Buttery metallic golds, rich foiled coppers, and deep espresso mattes for creating signature Pakistani festive smoky eyes.',
-  },
-  {
-    item_id: 204,
-    item_name: 'Sun-Drenched Molten Bronze & Champagne Luminizer',
-    category: 'makeup',
-    color: 'Bronze',
-    undertone: 'Medium / Olive',
-    price: 5200,
-    image_url: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=600&q=80',
-    description: 'Glass-skin liquid highlighter loaded with ultra-fine pearl pigments that mimic golden candlelight radiance.',
-  },
-  {
-    item_id: 205,
-    item_name: 'Deep Wine Berry & Mulberry Lip Elixir',
-    category: 'makeup',
-    color: 'Berry',
-    undertone: 'Cool / Fair to Dark',
-    price: 4600,
-    image_url: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=600&q=80',
-    description: 'Dramatic plum-wine hydrating lip stain that pairs effortlessly with silver, navy, emerald, and black formal outfits.',
-  },
-  {
-    item_id: 206,
-    item_name: 'Sunset Coral Silk Liquid Blush',
-    category: 'makeup',
-    color: 'Coral',
-    undertone: 'Warm',
-    price: 3900,
-    image_url: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80',
-    description: 'Weightless serum-infused cheek tint that melts into skin for a natural, dewy, sun-kissed flush.',
-  },
-  {
-    item_id: 207,
-    item_name: 'Smoky Plum & Amethyst Velvet Eyeshadow Quad',
-    category: 'makeup',
-    color: 'Plum',
-    undertone: 'Cool',
-    price: 6200,
-    image_url: 'https://images.unsplash.com/photo-1583241800698-e8ab01830a07?auto=format&fit=crop&w=600&q=80',
-    description: 'Deep plum and amethyst crushed pigment quad for seductive cool-toned bridal and reception evening looks.',
-  },
-  {
-    item_id: 208,
-    item_name: 'Pillow Soft Caramel Nude Hydrating Lip Oil',
-    category: 'makeup',
-    color: 'Nude',
-    undertone: 'Warm / Olive',
-    price: 3600,
-    image_url: 'https://images.unsplash.com/photo-1631730486784-5456119f69ae?auto=format&fit=crop&w=600&q=80',
-    description: 'Non-sticky peptide infused lip glaze providing sheer caramel tint with mirror-shine plumpness.',
-  },
-];
-
 export default function Makeup() {
   const [searchParams, setSearchParams] = useSearchParams();
   const collectionParam = searchParams.get('collection') || 'all';
@@ -94,10 +11,12 @@ export default function Makeup() {
   const { addToCart } = useCart();
   const [addedItem, setAddedItem] = useState(null);
 
-  const [makeup, setMakeup] = useState(PAKISTANI_MAKEUP);
+  const [makeup, setMakeup] = useState([]);
+  const [loadingCatalog, setLoadingCatalog] = useState(true);
 
   useEffect(() => {
     const fetchMakeup = async () => {
+      setLoadingCatalog(true);
       try {
         const res = await client.get('/catalog/items?category=makeup');
         const apiMakeup = res.data.map(item => ({
@@ -105,14 +24,16 @@ export default function Makeup() {
           item_name: item.item_name,
           category: item.category,
           color: item.color || 'Custom',
-          undertone: 'Universal / All', // Missing in DB, provide default
+          undertone: 'Universal / All',
           price: item.price || 0,
           image_url: item.image_url,
           description: item.description || '',
         }));
-        setMakeup([...apiMakeup, ...PAKISTANI_MAKEUP]);
+        setMakeup(apiMakeup);
       } catch (err) {
         console.error('Failed to fetch makeup catalog:', err);
+      } finally {
+        setLoadingCatalog(false);
       }
     };
     fetchMakeup();
@@ -237,6 +158,20 @@ export default function Makeup() {
       </div>
 
       {/* Makeup Grid */}
+      {loadingCatalog ? (
+        <div style={{ textAlign: 'center', padding: '5rem 2rem' }}>
+          <div className="spinner" style={{ margin: '0 auto 1.5rem', width: '36px', height: '36px', borderTopColor: '#ec4899' }} />
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '1rem' }}>Loading makeup catalog…</p>
+        </div>
+      ) : filteredMakeup.length === 0 ? (
+        <div className="glass-card" style={{ padding: '5rem 2rem', textAlign: 'center' }}>
+          <span style={{ fontSize: '3rem', display: 'block', marginBottom: '1rem' }}>💄</span>
+          <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#ffffff', marginBottom: '0.5rem' }}>No Makeup Items Found</h3>
+          <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem' }}>
+            No makeup items match your current filters, or the catalog is empty. Check back later or adjust your filters.
+          </p>
+        </div>
+      ) : (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '2.5rem' }}>
         {filteredMakeup.map((item) => (
           <div
@@ -329,6 +264,7 @@ export default function Makeup() {
           </div>
         ))}
       </div>
+      )}
 
     </div>
   );

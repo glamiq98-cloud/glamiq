@@ -39,9 +39,29 @@ export default function Home() {
     if (file) handleDressUpload(file);
   };
 
+  const handleUploadClick = () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    fileInputRef.current?.click();
+  };
+
+  const handleDragDropClick = () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    fileInputRef.current?.click();
+  };
+
   const handleDrop = (e) => {
     e.preventDefault();
     setDragOver(false);
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
     const file = e.dataTransfer.files?.[0];
     if (file) handleDressUpload(file);
   };
@@ -125,7 +145,7 @@ export default function Home() {
             />
             
             <button
-              onClick={() => fileInputRef.current?.click()}
+              onClick={handleUploadClick}
               disabled={uploading}
               className="btn btn-primary animate-pulse-glow"
               style={{
@@ -331,7 +351,7 @@ export default function Home() {
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
+          onClick={handleDragDropClick}
           className="glass-card"
           style={{
             padding: '3.5rem 2rem',

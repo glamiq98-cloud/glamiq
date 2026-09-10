@@ -3,81 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import client from '../api/client';
 
-export const PAKISTANI_JEWELLERY = [
-  {
-    item_id: 1,
-    item_name: 'Royal Kundan & Polki Heritage Choker Set',
-    category: 'jewelry',
-    color: 'Kundan Gold',
-    price: 89500,
-    image_url: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=600&q=80',
-    description: '22K gold plated heirloom Kundan choker handcrafted with meenakari reverse detailing, uncut polki stones, and freshwater pearl clusters.',
-  },
-  {
-    item_id: 2,
-    item_name: 'Celestial Sunburst Gold Chandelier Earrings',
-    category: 'jewelry',
-    color: 'Gold',
-    price: 24500,
-    image_url: 'https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&w=600&q=80',
-    description: 'Statement Pakistani jhumka chandelier earrings with fine filigree gold carving and zircon drops.',
-  },
-  {
-    item_id: 3,
-    item_name: 'Traditional Kashmiri Kundan Matha Patti & Jhumar',
-    category: 'jewelry',
-    color: 'Kundan Gold',
-    price: 45000,
-    image_url: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=600&q=80',
-    description: 'Intricate bridal forehead ornament with cascading pearls and green emerald drop stones.',
-  },
-  {
-    item_id: 4,
-    item_name: 'Lustrous 18K Gold Layered Herringbone Necklace',
-    category: 'jewelry',
-    color: 'Gold',
-    price: 38000,
-    image_url: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=600&q=80',
-    description: 'Versatile contemporary layered necklace in radiant 18K gold polish, perfect for modern pret and festive kurtis.',
-  },
-  {
-    item_id: 5,
-    item_name: 'Sterling Silver Cascading Tennis Necklace & Studs',
-    category: 'jewelry',
-    color: 'Silver',
-    price: 48000,
-    image_url: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=600&q=80',
-    description: 'Pure 925 sterling silver brilliant-cut cubic zirconia necklace for navy, emerald, and cool-toned formal ensembles.',
-  },
-  {
-    item_id: 6,
-    item_name: 'Hammered 22K Gold Statement Bridal Bangle Set',
-    category: 'jewelry',
-    color: 'Gold',
-    price: 28000,
-    image_url: 'https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?auto=format&fit=crop&w=600&q=80',
-    description: 'Set of 4 artisan-carved traditional kadas with ruby and emerald stone accents.',
-  },
-  {
-    item_id: 7,
-    item_name: 'Midnight Sapphire & Platinum Drop Chandbalis',
-    category: 'jewelry',
-    color: 'Silver',
-    price: 36000,
-    image_url: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=600&q=80',
-    description: 'Moon-shaped crescent chandbali earrings crowned with rich royal blue sapphire centerpieces.',
-  },
-  {
-    item_id: 8,
-    item_name: 'Baroque Freshwater Pearl & Rose Gold Drop Earrings',
-    category: 'jewelry',
-    color: 'Rose Gold',
-    price: 29500,
-    image_url: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=600&q=80',
-    description: 'Romantic iridescent natural baroque pearls suspended from dainty rose gold diamond pavé huggies.',
-  },
-];
-
 export default function Jewellery() {
   const [searchParams, setSearchParams] = useSearchParams();
   const collectionParam = searchParams.get('collection') || 'all';
@@ -86,10 +11,12 @@ export default function Jewellery() {
   const { addToCart } = useCart();
   const [addedItem, setAddedItem] = useState(null);
 
-  const [jewellery, setJewellery] = useState(PAKISTANI_JEWELLERY);
+  const [jewellery, setJewellery] = useState([]);
+  const [loadingCatalog, setLoadingCatalog] = useState(true);
 
   useEffect(() => {
     const fetchJewellery = async () => {
+      setLoadingCatalog(true);
       try {
         const res = await client.get('/catalog/items?category=jewelry');
         const apiJewellery = res.data.map(item => ({
@@ -101,9 +28,11 @@ export default function Jewellery() {
           image_url: item.image_url,
           description: item.description || '',
         }));
-        setJewellery([...apiJewellery, ...PAKISTANI_JEWELLERY]);
+        setJewellery(apiJewellery);
       } catch (err) {
         console.error('Failed to fetch jewellery catalog:', err);
+      } finally {
+        setLoadingCatalog(false);
       }
     };
     fetchJewellery();
@@ -232,6 +161,20 @@ export default function Jewellery() {
       </div>
 
       {/* Jewellery Grid */}
+      {loadingCatalog ? (
+        <div style={{ textAlign: 'center', padding: '5rem 2rem' }}>
+          <div className="spinner" style={{ margin: '0 auto 1.5rem', width: '36px', height: '36px', borderTopColor: '#d4af37' }} />
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '1rem' }}>Loading jewellery catalog…</p>
+        </div>
+      ) : filteredJewellery.length === 0 ? (
+        <div className="glass-card" style={{ padding: '5rem 2rem', textAlign: 'center' }}>
+          <span style={{ fontSize: '3rem', display: 'block', marginBottom: '1rem' }}>💍</span>
+          <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#ffffff', marginBottom: '0.5rem' }}>No Jewellery Found</h3>
+          <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem' }}>
+            No jewellery items match your current filters, or the catalog is empty. Check back later or adjust your filters.
+          </p>
+        </div>
+      ) : (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '2.5rem' }}>
         {filteredJewellery.map((item) => (
           <div
@@ -308,6 +251,7 @@ export default function Jewellery() {
           </div>
         ))}
       </div>
+      )}
 
     </div>
   );

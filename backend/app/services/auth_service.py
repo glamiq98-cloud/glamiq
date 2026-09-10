@@ -46,7 +46,7 @@ def create_access_token(user_id: int) -> str:
     return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
 
-def create_refresh_token(user_id: int) -> str:
+def create_refresh_token(user_id: int, token_version: int = 1) -> str:
     """Create a long-lived refresh token (default 7 days)."""
     expire = datetime.now(timezone.utc) + timedelta(
         days=settings.REFRESH_TOKEN_EXPIRE_DAYS
@@ -55,6 +55,7 @@ def create_refresh_token(user_id: int) -> str:
         "sub": str(user_id),
         "exp": expire,
         "type": "refresh",
+        "version": token_version,
     }
     return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 

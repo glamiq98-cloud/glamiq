@@ -4,6 +4,7 @@ Admin router — Auth, User Management, Product Catalog Moderation, and Usage An
 
 from datetime import datetime, timezone
 import uuid
+import os
 from pathlib import Path
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
@@ -73,9 +74,13 @@ async def admin_login(body: AdminLoginRequest, db: AsyncSession = Depends(get_db
 # ── Users Management ───────────────────────────────────────────────────
 
 @router.get("/users", response_model=List[AdminUserItem], summary="List all users")
-async def list_users(db: AsyncSession = Depends(get_db)):
+async def list_users(
+    skip: int = 0,
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db)
+):
     """List registered users alongside their wardrobe counts and profile details."""
-    result = await db.execute(select(User).order_by(desc(User.created_at)))
+    result = await db.execute(select(User).order_by(desc(User.created_at)).offset(skip).limit(limit))
     users = list(result.scalars().all())
 
     user_items = []
@@ -110,6 +115,8 @@ async def list_users(db: AsyncSession = Depends(get_db)):
 async def list_products(
     category: Optional[str] = None,
     status_filter: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 100,
     db: AsyncSession = Depends(get_db),
 ):
     """List fashion items with optional filtering by category and status."""
@@ -119,6 +126,7 @@ async def list_products(
     if status_filter:
         query = query.where(FashionItem.status == status_filter)
 
+    query = query.offset(skip).limit(limit)
     result = await db.execute(query)
     return list(result.scalars().all())
 
@@ -133,12 +141,22 @@ async def upload_product_image(file: UploadFile = File(...)):
             detail=f"File type '{ext}' not allowed. Use: {', '.join(ALLOWED_EXTENSIONS)}",
         )
 
+    if getattr(file, "size", None) is not None:
+        if file.size > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail="File too large. Maximum size is 10MB",
+            )
+    else:
+        file.file.seek(0, 2)
+        if file.file.tell() > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail="File too large. Maximum size is 10MB",
+            )
+        await file.seek(0)
+        
     contents = await file.read()
-    if len(contents) > MAX_FILE_SIZE:
-        raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail="File too large. Maximum size is 10MB",
-        )
 
     filename = f"prod_{uuid.uuid4().hex[:10]}{ext}"
     file_path = PRODUCT_UPLOAD_DIR / filename
@@ -201,6 +219,15 @@ async def delete_product(item_id: int, db: AsyncSession = Depends(get_db)):
     
     await db.delete(item)
     await db.commit()
+    
+    # Clean up physical image file
+    if item.image_url:
+        file_path = PRODUCT_UPLOAD_DIR.parent.parent / item.image_url.lstrip("/")
+        try:
+            if file_path.exists():
+                os.remove(file_path)
+        except Exception as e:
+            print(f"Failed to delete file {file_path}: {e}")
     
     return {"message": f"Product '{item.item_name}' deleted successfully"}
 

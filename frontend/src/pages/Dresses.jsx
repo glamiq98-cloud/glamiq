@@ -4,94 +4,34 @@ import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import client from '../api/client';
 
-export const PAKISTANI_DRESSES = [
-  {
-    id: 'd1',
-    item_name: 'Crimson Velvet Bridal Lehenga with Zardozi Embroidery',
-    category: 'dress',
-    style_type: 'formal',
-    occasion: 'Wedding',
-    color: 'Crimson Red',
-    price: 185000,
-    image_url: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=600&q=80',
-    description: 'Heavily hand-embellished royal crimson velvet lehenga with antique gold zardozi and kora dabka detailing.',
-  },
-  {
-    id: 'd2',
-    item_name: 'Mustard Ochre Raw Silk Festive Kurti Suit',
-    category: 'dress',
-    style_type: 'casual',
-    occasion: 'Festival',
-    color: 'Mustard Yellow',
-    price: 34500,
-    image_url: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=600&q=80',
-    description: 'Radiant mustard yellow raw silk straight kurti ensemble with intricate resham threadwork and ruffled net dupatta.',
-  },
-  {
-    id: 'd3',
-    item_name: 'Emerald Green Organza Luxury Pret Anarkali',
-    category: 'dress',
-    style_type: 'formal',
-    occasion: 'Party',
-    color: 'Emerald Green',
-    price: 68000,
-    image_url: 'https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?auto=format&fit=crop&w=600&q=80',
-    description: 'Floor-length flared emerald green pure organza peshwas accented with gota patti and mirror embroidery.',
-  },
-  {
-    id: 'd4',
-    item_name: 'Royal Midnight Navy Chiffon Formal Peshwas',
-    category: 'dress',
-    style_type: 'formal',
-    occasion: 'Formal',
-    color: 'Royal Blue',
-    price: 52000,
-    image_url: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80',
-    description: 'Sophisticated deep midnight blue chiffon jacket-style peshwas with silver tilla and sequin hand embroidery.',
-  },
-  {
-    id: 'd5',
-    item_name: 'Blush Pink & Ivory Net Bridal Maxi Gown',
-    category: 'dress',
-    style_type: 'formal',
-    occasion: 'Wedding',
-    color: 'Blush Pink',
-    price: 145000,
-    image_url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=600&q=80',
-    description: 'Ethereal pastel blush pink French net gown enriched with Swarovski crystals, pearls, and silver zardozi work.',
-  },
-  {
-    id: 'd6',
-    item_name: 'Onyx Black Silk Velvet Kurta & Jamawar Pants',
-    category: 'dress',
-    style_type: 'casual',
-    occasion: 'Date Night',
-    color: 'Midnight Black',
-    price: 42000,
-    image_url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80',
-    description: 'Statement black micro-velvet straight shirt with antique bronze bullion embroidery paired with pure woven jamawar.',
-  },
-];
-
 export default function Dresses() {
   const [searchParams, setSearchParams] = useSearchParams();
   const collectionParam = searchParams.get('collection') || 'all';
 
   const [selectedOccasion, setSelectedOccasion] = useState('all');
   const [selectedColor, setSelectedColor] = useState('all');
-  const [stylingLoading, setStylingLoading] = useState(null);
   const { addToCart } = useCart();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  const [dresses, setDresses] = useState(PAKISTANI_DRESSES);
+  const [dresses, setDresses] = useState([]);
+  const [loadingCatalog, setLoadingCatalog] = useState(true);
+
+  // AI Styles Modal
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [aiStylesDress, setAiStylesDress] = useState(null);
+  const [aiStylesData, setAiStylesData] = useState(null);
+  const [aiStylesLoading, setAiStylesLoading] = useState(false);
+  const [aiStylesError, setAiStylesError] = useState('');
 
   useEffect(() => {
     const fetchDresses = async () => {
+      setLoadingCatalog(true);
       try {
         const res = await client.get('/catalog/items?category=dress');
         const apiDresses = res.data.map(item => ({
           id: item.item_id.toString(),
+          item_id: item.item_id,
           item_name: item.item_name,
           category: item.category,
           style_type: item.style_type || 'formal',
@@ -101,9 +41,11 @@ export default function Dresses() {
           image_url: item.image_url,
           description: item.description || '',
         }));
-        setDresses([...apiDresses, ...PAKISTANI_DRESSES]);
+        setDresses(apiDresses);
       } catch (err) {
         console.error('Failed to fetch dresses catalog:', err);
+      } finally {
+        setLoadingCatalog(false);
       }
     };
     fetchDresses();
@@ -133,16 +75,20 @@ export default function Dresses() {
     return matchOccasion && matchColor;
   });
 
-  const handleStyleWithAI = async (dress) => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
-    setStylingLoading(dress.id);
+  const handleViewAiStyles = async (dress) => {
+    setAiStylesDress(dress);
+    setShowAiModal(true);
+    setAiStylesData(null);
+    setAiStylesError('');
+    setAiStylesLoading(true);
     try {
-      navigate(`/analyzer?color=${encodeURIComponent(dress.color)}&style=${dress.style_type}&img=${encodeURIComponent(dress.image_url)}`);
+      const res = await client.get(`/catalog/ai-styles/${dress.item_id}`);
+      setAiStylesData(res.data);
+    } catch (err) {
+      console.error('AI Styles failed:', err);
+      setAiStylesError(err.response?.data?.detail || 'Failed to generate AI styling recommendations. Please try again.');
     } finally {
-      setStylingLoading(null);
+      setAiStylesLoading(false);
     }
   };
 
@@ -268,6 +214,20 @@ export default function Dresses() {
       </div>
 
       {/* Dress Grid */}
+      {loadingCatalog ? (
+        <div style={{ textAlign: 'center', padding: '5rem 2rem' }}>
+          <div className="spinner" style={{ margin: '0 auto 1.5rem', width: '36px', height: '36px', borderTopColor: '#ec4899' }} />
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '1rem' }}>Loading dress catalog…</p>
+        </div>
+      ) : filteredDresses.length === 0 ? (
+        <div className="glass-card" style={{ padding: '5rem 2rem', textAlign: 'center' }}>
+          <span style={{ fontSize: '3rem', display: 'block', marginBottom: '1rem' }}>👗</span>
+          <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#ffffff', marginBottom: '0.5rem' }}>No Dresses Found</h3>
+          <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem' }}>
+            No dresses match your current filters, or the catalog is empty. Check back later or adjust your filters.
+          </p>
+        </div>
+      ) : (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2.5rem' }}>
         {filteredDresses.map((dress) => (
           <div
@@ -346,14 +306,14 @@ export default function Dresses() {
                   </span>
                 </div>
 
-                {/* Actions: Style with AI + Add to Cart */}
+                {/* Actions: View AI Styles + Add to Cart */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '0.75rem' }}>
                   <button
-                    onClick={() => handleStyleWithAI(dress)}
+                    onClick={() => handleViewAiStyles(dress)}
                     className="btn btn-primary"
                     style={{ padding: '0.65rem', fontSize: '0.875rem', fontWeight: 700 }}
                   >
-                    ✨ Style with AI
+                    ✨ View AI Styles
                   </button>
 
                   <button
@@ -370,6 +330,152 @@ export default function Dresses() {
           </div>
         ))}
       </div>
+      )}
+
+      {/* AI Styles Modal */}
+      {showAiModal && aiStylesDress && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 200,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            backdropFilter: 'blur(12px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.5rem',
+          }}
+          onClick={() => setShowAiModal(false)}
+        >
+          <div
+            className="card animate-scale-in"
+            style={{
+              width: '100%',
+              maxWidth: '680px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              background: 'linear-gradient(145deg, rgba(26, 15, 30, 0.98), rgba(46, 26, 53, 0.95))',
+              border: '1px solid rgba(236, 72, 153, 0.3)',
+              borderRadius: 'var(--radius-xl)',
+              padding: '2.5rem',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
+                <img
+                  src={aiStylesDress.image_url}
+                  alt={aiStylesDress.item_name}
+                  style={{
+                    width: '80px',
+                    height: '80px',
+                    borderRadius: 'var(--radius-lg)',
+                    objectFit: 'cover',
+                    border: '2px solid rgba(236, 72, 153, 0.4)',
+                  }}
+                />
+                <div>
+                  <span className="badge-pill" style={{ marginBottom: '0.35rem', fontSize: '0.7rem' }}>✨ AI Styling Analysis</span>
+                  <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#ffffff', lineHeight: 1.3 }}>
+                    {aiStylesDress.item_name}
+                  </h2>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAiModal(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)', fontSize: '1.5rem', cursor: 'pointer', padding: '0.25rem' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Content */}
+            {aiStylesLoading ? (
+              <div style={{ textAlign: 'center', padding: '4rem 0' }}>
+                <div className="spinner" style={{ margin: '0 auto 1.5rem', width: '36px', height: '36px', borderTopColor: '#ec4899' }} />
+                <h3 style={{ fontSize: '1.15rem', color: '#ffffff', fontWeight: 600 }}>
+                  Generating AI Style Recommendations…
+                </h3>
+                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+                  Analyzing color harmony, fabric, and occasion context
+                </p>
+              </div>
+            ) : aiStylesError ? (
+              <div style={{ background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.3)', color: '#fda4af', padding: '1.5rem', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+                <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>⚠️ {aiStylesError}</p>
+                <button onClick={() => handleViewAiStyles(aiStylesDress)} className="btn btn-primary" style={{ marginTop: '0.75rem', padding: '0.5rem 1.5rem', fontSize: '0.85rem' }}>
+                  Retry
+                </button>
+              </div>
+            ) : aiStylesData ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+
+                {/* Jewelry Direction */}
+                <div style={{ background: 'rgba(212, 175, 55, 0.08)', border: '1px solid rgba(212, 175, 55, 0.25)', borderRadius: 'var(--radius-lg)', padding: '1.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                    <span style={{ fontSize: '1.25rem' }}>💎</span>
+                    <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-accent-light)' }}>Jewelry Direction</h4>
+                  </div>
+                  <p style={{ color: '#fce7f3', fontSize: '0.925rem', lineHeight: 1.75 }}>
+                    {aiStylesData.jewelry_suggestion}
+                  </p>
+                </div>
+
+                {/* Makeup Palette */}
+                <div style={{ background: 'rgba(236, 72, 153, 0.08)', border: '1px solid rgba(236, 72, 153, 0.25)', borderRadius: 'var(--radius-lg)', padding: '1.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                    <span style={{ fontSize: '1.25rem' }}>💄</span>
+                    <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#f472b6' }}>Makeup Palette</h4>
+                  </div>
+                  <p style={{ color: '#fce7f3', fontSize: '0.925rem', lineHeight: 1.75 }}>
+                    {aiStylesData.makeup_suggestion}
+                  </p>
+                </div>
+
+                {/* Occasion Tips */}
+                <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', borderRadius: 'var(--radius-lg)', padding: '1.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                    <span style={{ fontSize: '1.25rem' }}>🎯</span>
+                    <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#34d399' }}>Occasion Tips</h4>
+                  </div>
+                  <p style={{ color: '#fce7f3', fontSize: '0.925rem', lineHeight: 1.75 }}>
+                    {aiStylesData.occasion_tips}
+                  </p>
+                </div>
+
+                {/* Full Stylist Explanation */}
+                <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(236, 72, 153, 0.15)', borderRadius: 'var(--radius-lg)', padding: '1.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                    <span style={{ fontSize: '1.25rem' }}>🧠</span>
+                    <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#c084fc' }}>Full Stylist Analysis</h4>
+                  </div>
+                  <p style={{ color: '#d1c4d4', fontSize: '0.9rem', lineHeight: 1.8, fontStyle: 'italic' }}>
+                    "{aiStylesData.explanation}"
+                  </p>
+                </div>
+
+                {/* Color Harmony Badge */}
+                <div style={{ textAlign: 'center', paddingTop: '0.5rem' }}>
+                  <span style={{
+                    display: 'inline-block',
+                    padding: '0.5rem 1.5rem',
+                    borderRadius: 'var(--radius-pill)',
+                    background: 'linear-gradient(135deg, rgba(236, 72, 153, 0.25), rgba(212, 175, 55, 0.25))',
+                    border: '1px solid rgba(236, 72, 153, 0.3)',
+                    fontSize: '0.85rem',
+                    fontWeight: 700,
+                    color: '#ffffff',
+                  }}>
+                    🎨 Color Harmony: {aiStylesData.color_harmony}
+                  </span>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      )}
 
     </div>
   );

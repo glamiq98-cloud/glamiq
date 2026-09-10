@@ -68,13 +68,23 @@ async def upload_outfit(
             detail=f"File type '{ext}' not allowed. Use: {', '.join(ALLOWED_EXTENSIONS)}",
         )
 
-    # Read and validate size
+    # Read and validate size efficiently
+    if getattr(file, "size", None) is not None:
+        if file.size > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail=f"File too large. Maximum size is {MAX_FILE_SIZE // (1024 * 1024)}MB",
+            )
+    else:
+        file.file.seek(0, 2)
+        if file.file.tell() > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail=f"File too large. Maximum size is {MAX_FILE_SIZE // (1024 * 1024)}MB",
+            )
+        await file.seek(0)
+        
     contents = await file.read()
-    if len(contents) > MAX_FILE_SIZE:
-        raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=f"File too large. Maximum size is {MAX_FILE_SIZE // (1024 * 1024)}MB",
-        )
 
     # Validate occasion exists if provided
     if occasion_id is not None:
@@ -95,8 +105,12 @@ async def upload_outfit(
     # If color palette not provided, auto-detect using AI Vision
     detected_color = color_palette
     if not detected_color or detected_color.strip() == "":
-        vision_result = await analyze_outfit_image_ai(file_path)
-        detected_color = vision_result.get("color_palette", "Mustard Yellow & Warm Gold")
+        try:
+            vision_result = await analyze_outfit_image_ai(file_path)
+            detected_color = vision_result.get("color_palette", "Mustard Yellow & Warm Gold")
+        except Exception as e:
+            print(f"AI Vision error: {e}")
+            detected_color = "Mustard Yellow & Warm Gold"
 
     # Create outfit record
     outfit = Outfit(
@@ -133,6 +147,8 @@ async def upload_outfit(
 
 @router.get("", response_model=OutfitListResponse)
 async def list_outfits(
+    skip: int = 0,
+    limit: int = 100,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -141,6 +157,8 @@ async def list_outfits(
         select(Outfit)
         .where(Outfit.user_id == current_user.user_id)
         .order_by(Outfit.uploaded_at.desc())
+        .offset(skip)
+        .limit(limit)
     )
     outfits = result.scalars().all()
 
@@ -177,3 +195,50 @@ async def get_outfit(
         )
 
     return _outfit_to_response(outfit)
+
+
+@router.delete("/{outfit_id}", summary="Delete an outfit")
+async def delete_outfit(
+    outfit_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete an outfit, its recommendations, and the uploaded image file."""
+    result = await db.execute(
+        select(Outfit).where(
+            Outfit.outfit_id == outfit_id,
+            Outfit.user_id == current_user.user_id,
+        )
+    )
+    outfit = result.scalar_one_or_none()
+
+    if not outfit:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Outfit not found",
+        )
+
+    # Delete related recommendations to satisfy foreign key constraints
+    from app.models.recommendation import Recommendation, recommendation_items
+    from sqlalchemy import delete
+    
+    recs_res = await db.execute(select(Recommendation).where(Recommendation.outfit_id == outfit_id))
+    recs = recs_res.scalars().all()
+    for rec in recs:
+        await db.execute(delete(recommendation_items).where(recommendation_items.c.rec_id == rec.rec_id))
+        await db.delete(rec)
+
+    # Delete outfit from DB
+    await db.delete(outfit)
+    await db.commit()
+
+    # Delete physical image file
+    if outfit.image_url:
+        file_path = UPLOAD_DIR / Path(outfit.image_url).name
+        try:
+            if file_path.exists():
+                os.remove(file_path)
+        except Exception as e:
+            print(f"Failed to delete file {file_path}: {e}")
+
+    return {"message": "Outfit deleted successfully"}
