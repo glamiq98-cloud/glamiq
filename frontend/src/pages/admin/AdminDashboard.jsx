@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../../api/client';
+import AdminAnalyticsReport from './AdminAnalyticsReport';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -287,50 +288,134 @@ export default function AdminDashboard() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
             gap: '1.25rem',
             marginBottom: '2.5rem',
           }}
         >
-          <div className="card" style={{ padding: '1.25rem' }}>
-            <div style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase' }}>
-              Total Users
+          {/* Total Users */}
+          <div
+            className="card"
+            style={{
+              padding: '1.35rem',
+              position: 'relative',
+              overflow: 'hidden',
+              background: 'linear-gradient(135deg, rgba(26,15,30,0.95) 0%, rgba(212,175,55,0.06) 100%)',
+              borderTop: '2px solid var(--color-accent)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: 'var(--color-text-muted)', fontSize: '0.78rem', fontWeight: 600, textTransform: 'uppercase' }}>
+                Total Accounts
+              </span>
+              <span style={{ fontSize: '1.1rem' }}>👤</span>
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: 700, marginTop: '0.5rem', color: 'var(--color-primary-light)' }}>
+            <div style={{ fontSize: '2.2rem', fontWeight: 800, marginTop: '0.4rem', color: '#ffffff' }}>
               {stats.total_users}
             </div>
+            <svg viewBox="0 0 100 24" style={{ width: '100%', height: '24px', marginTop: '0.5rem', opacity: 0.8 }}>
+              <path d="M 0 18 Q 25 22, 50 12 T 100 6" fill="none" stroke="var(--color-accent)" strokeWidth="2" />
+            </svg>
           </div>
-          <div className="card" style={{ padding: '1.25rem' }}>
-            <div style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase' }}>
-              Outfits Uploaded
+
+          {/* Outfits Uploaded */}
+          <div
+            className="card"
+            style={{
+              padding: '1.35rem',
+              position: 'relative',
+              overflow: 'hidden',
+              background: 'linear-gradient(135deg, rgba(26,15,30,0.95) 0%, rgba(96,165,250,0.06) 100%)',
+              borderTop: '2px solid #60a5fa',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: 'var(--color-text-muted)', fontSize: '0.78rem', fontWeight: 600, textTransform: 'uppercase' }}>
+                Wardrobe Uploads
+              </span>
+              <span style={{ fontSize: '1.1rem' }}>👗</span>
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: 700, marginTop: '0.5rem', color: '#60a5fa' }}>
+            <div style={{ fontSize: '2.2rem', fontWeight: 800, marginTop: '0.4rem', color: '#ffffff' }}>
               {stats.total_outfits}
             </div>
+            <svg viewBox="0 0 100 24" style={{ width: '100%', height: '24px', marginTop: '0.5rem', opacity: 0.8 }}>
+              <path d="M 0 20 Q 30 5, 60 16 T 100 4" fill="none" stroke="#60a5fa" strokeWidth="2" />
+            </svg>
           </div>
-          <div className="card" style={{ padding: '1.25rem' }}>
-            <div style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase' }}>
-              Style Recommendations
+
+          {/* Style Recommendations */}
+          <div
+            className="card"
+            style={{
+              padding: '1.35rem',
+              position: 'relative',
+              overflow: 'hidden',
+              background: 'linear-gradient(135deg, rgba(26,15,30,0.95) 0%, rgba(236,72,153,0.08) 100%)',
+              borderTop: '2px solid var(--color-primary)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: 'var(--color-text-muted)', fontSize: '0.78rem', fontWeight: 600, textTransform: 'uppercase' }}>
+                AI Recommendations
+              </span>
+              <span style={{ fontSize: '1.1rem' }}>✨</span>
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: 700, marginTop: '0.5rem', color: '#c084fc' }}>
+            <div style={{ fontSize: '2.2rem', fontWeight: 800, marginTop: '0.4rem', color: '#ffffff' }}>
               {stats.total_recommendations}
             </div>
+            <svg viewBox="0 0 100 24" style={{ width: '100%', height: '24px', marginTop: '0.5rem', opacity: 0.8 }}>
+              <path d="M 0 16 Q 25 24, 55 8 T 100 2" fill="none" stroke="var(--color-primary)" strokeWidth="2" />
+            </svg>
           </div>
-          <div className="card" style={{ padding: '1.25rem' }}>
-            <div style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase' }}>
-              Catalog Products
+
+          {/* Catalog Products */}
+          <div
+            className="card"
+            style={{
+              padding: '1.35rem',
+              position: 'relative',
+              overflow: 'hidden',
+              background: 'linear-gradient(135deg, rgba(26,15,30,0.95) 0%, rgba(250,204,21,0.06) 100%)',
+              borderTop: '2px solid #facc15',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: 'var(--color-text-muted)', fontSize: '0.78rem', fontWeight: 600, textTransform: 'uppercase' }}>
+                Active Catalog
+              </span>
+              <span style={{ fontSize: '1.1rem' }}>💎</span>
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: 700, marginTop: '0.5rem', color: '#facc15' }}>
+            <div style={{ fontSize: '2.2rem', fontWeight: 800, marginTop: '0.4rem', color: '#ffffff' }}>
               {stats.total_fashion_items}
             </div>
+            <svg viewBox="0 0 100 24" style={{ width: '100%', height: '24px', marginTop: '0.5rem', opacity: 0.8 }}>
+              <path d="M 0 14 Q 35 18, 70 8 T 100 10" fill="none" stroke="#facc15" strokeWidth="2" />
+            </svg>
           </div>
-          <div className="card" style={{ padding: '1.25rem' }}>
-            <div style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase' }}>
-              Stylist Chat Turns
+
+          {/* Stylist Chat Turns */}
+          <div
+            className="card"
+            style={{
+              padding: '1.35rem',
+              position: 'relative',
+              overflow: 'hidden',
+              background: 'linear-gradient(135deg, rgba(26,15,30,0.95) 0%, rgba(74,222,128,0.06) 100%)',
+              borderTop: '2px solid #4ade80',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: 'var(--color-text-muted)', fontSize: '0.78rem', fontWeight: 600, textTransform: 'uppercase' }}>
+                AI Stylist Sessions
+              </span>
+              <span style={{ fontSize: '1.1rem' }}>💬</span>
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: 700, marginTop: '0.5rem', color: '#4ade80' }}>
+            <div style={{ fontSize: '2.2rem', fontWeight: 800, marginTop: '0.4rem', color: '#ffffff' }}>
               {stats.total_chat_messages}
             </div>
+            <svg viewBox="0 0 100 24" style={{ width: '100%', height: '24px', marginTop: '0.5rem', opacity: 0.8 }}>
+              <path d="M 0 18 Q 40 4, 75 14 T 100 6" fill="none" stroke="#4ade80" strokeWidth="2" />
+            </svg>
           </div>
         </div>
       )}
@@ -380,7 +465,7 @@ export default function AdminDashboard() {
             fontSize: '1rem',
           }}
         >
-          📊 Activity Logs
+          📊 Intelligence & Analytics
         </button>
       </div>
 
@@ -574,32 +659,68 @@ export default function AdminDashboard() {
           </table>
         </div>
       ) : (
-        /* Tab 3: Activity Logs */
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {stats?.recent_activity?.length === 0 ? (
-            <p style={{ color: 'var(--color-text-muted)' }}>No recent activity records.</p>
-          ) : (
-            stats?.recent_activity?.map((act) => (
-              <div
-                key={act.id}
-                className="card"
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '1.25rem',
-                }}
-              >
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: '1rem', marginBottom: '0.25rem' }}>{act.title}</div>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>{act.detail}</div>
-                </div>
-                <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                  {new Date(act.timestamp).toLocaleTimeString()}
-                </span>
+        /* Tab 3: Intelligence & Analytics */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+          <AdminAnalyticsReport stats={stats} onRefresh={fetchAllData} />
+
+          {/* Activity Logs Stream */}
+          <div
+            className="card"
+            style={{
+              padding: '1.75rem',
+              background: 'linear-gradient(180deg, rgba(26,15,30,0.85) 0%, rgba(18,10,21,0.95) 100%)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 'var(--radius-lg)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
+              <span style={{ fontSize: '1.25rem' }}>⚡</span>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>Recent Style Activity Log</h3>
+            </div>
+            {stats?.recent_activity?.length === 0 ? (
+              <p style={{ color: 'var(--color-text-muted)' }}>No recent activity records.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {stats?.recent_activity?.map((act) => (
+                  <div
+                    key={act.id}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '1rem 1.25rem',
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      border: '1px solid rgba(255, 255, 255, 0.05)',
+                      borderRadius: 'var(--radius-md)',
+                      flexWrap: 'wrap',
+                      gap: '0.75rem',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '0.2rem', color: 'var(--color-text)' }}>
+                        {act.title}
+                      </div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+                        {act.detail}
+                      </div>
+                    </div>
+                    <span
+                      style={{
+                        fontSize: '0.78rem',
+                        color: 'var(--color-text-muted)',
+                        background: 'rgba(0,0,0,0.35)',
+                        padding: '0.2rem 0.65rem',
+                        borderRadius: 'var(--radius-pill)',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                      }}
+                    >
+                      {new Date(act.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                ))}
               </div>
-            ))
-          )}
+            )}
+          </div>
         </div>
       )}
 

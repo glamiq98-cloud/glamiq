@@ -61,3 +61,8 @@ class AdminStatsResponse(BaseModel):
     total_fashion_items: int
     total_chat_messages: int
     recent_activity: List[dict] = []
+    time_series: List[dict] = []
+    occasions: List[dict] = []
+    categories: List[dict] = []
+    top_recommended: List[dict] = []
+    color_palettes: List[dict] = []

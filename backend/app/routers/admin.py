@@ -2,19 +2,20 @@
 Admin router — Auth, User Management, Product Catalog Moderation, and Usage Analytics.
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta, date
 import uuid
 import os
 from pathlib import Path
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, desc, or_, delete
+from sqlalchemy import select, func, desc, or_, delete, cast, Date
 
 from app.dependencies import get_db
 from app.models.admin import Admin
 from app.models.user import User
 from app.models.outfit import Outfit
+from app.models.occasion import Occasion
 from app.models.fashion_item import FashionItem
 from app.models.recommendation import Recommendation, recommendation_items
 from app.models.chat import ChatHistory
@@ -236,14 +237,130 @@ async def delete_product(item_id: int, db: AsyncSession = Depends(get_db)):
 
 @router.get("/logs", response_model=AdminStatsResponse, summary="Get system usage analytics")
 async def get_system_logs(db: AsyncSession = Depends(get_db)):
-    """Fetch aggregated platform analytics, total counts, and recent activity logs."""
+    """Fetch aggregated platform analytics, time-series metrics, occasion breakdown, and logs."""
     total_users = (await db.execute(select(func.count()).select_from(User))).scalar() or 0
     total_outfits = (await db.execute(select(func.count()).select_from(Outfit))).scalar() or 0
     total_recs = (await db.execute(select(func.count()).select_from(Recommendation))).scalar() or 0
     total_items = (await db.execute(select(func.count()).select_from(FashionItem))).scalar() or 0
     total_chats = (await db.execute(select(func.count()).select_from(ChatHistory))).scalar() or 0
 
-    # Recent recommendations for activity feed
+    # 1. Continuous 14-day time series
+    today = datetime.now(timezone.utc).date()
+    start_date = today - timedelta(days=13)
+    start_dt = datetime.combine(start_date, datetime.min.time(), tzinfo=timezone.utc)
+
+    user_ts_res = await db.execute(
+        select(cast(User.created_at, Date).label("d"), func.count(User.user_id))
+        .where(User.created_at >= start_dt)
+        .group_by("d")
+    )
+    user_ts_map = {row[0]: row[1] for row in user_ts_res.all()}
+
+    outfit_ts_res = await db.execute(
+        select(cast(Outfit.uploaded_at, Date).label("d"), func.count(Outfit.outfit_id))
+        .where(Outfit.uploaded_at >= start_dt)
+        .group_by("d")
+    )
+    outfit_ts_map = {row[0]: row[1] for row in outfit_ts_res.all()}
+
+    rec_ts_res = await db.execute(
+        select(cast(Recommendation.generated_at, Date).label("d"), func.count(Recommendation.rec_id))
+        .where(Recommendation.generated_at >= start_dt)
+        .group_by("d")
+    )
+    rec_ts_map = {row[0]: row[1] for row in rec_ts_res.all()}
+
+    time_series = []
+    for i in range(14):
+        curr = start_date + timedelta(days=i)
+        time_series.append({
+            "date": curr.strftime("%b %d"),
+            "iso_date": curr.isoformat(),
+            "users": user_ts_map.get(curr, 0),
+            "outfits": outfit_ts_map.get(curr, 0),
+            "recommendations": rec_ts_map.get(curr, 0),
+        })
+
+    # 2. Occasions distribution (for Honeycomb / Hive graph)
+    occ_res = await db.execute(select(Occasion).order_by(Occasion.occasion_id))
+    all_occasions = occ_res.scalars().all()
+
+    occ_counts_res = await db.execute(
+        select(Outfit.occasion_id, func.count(Outfit.outfit_id))
+        .where(Outfit.occasion_id.isnot(None))
+        .group_by(Outfit.occasion_id)
+    )
+    occ_counts_map = {row[0]: row[1] for row in occ_counts_res.all()}
+
+    total_tagged = sum(occ_counts_map.values()) or 1
+    occasions_data = []
+    for occ in all_occasions:
+        cnt = occ_counts_map.get(occ.occasion_id, 0)
+        pct = round((cnt / total_tagged) * 100, 1)
+        occasions_data.append({
+            "occasion_id": occ.occasion_id,
+            "occasion_name": occ.occasion_name,
+            "description": occ.description or "",
+            "count": cnt,
+            "percentage": pct,
+        })
+    occasions_data.sort(key=lambda x: x["count"], reverse=True)
+
+    # 3. Product categories & status breakdown
+    cat_res = await db.execute(
+        select(FashionItem.category, FashionItem.status, func.count(FashionItem.item_id))
+        .group_by(FashionItem.category, FashionItem.status)
+    )
+    categories_map = {
+        "jewelry": {"category": "jewelry", "count": 0, "approved": 0, "pending": 0, "rejected": 0},
+        "makeup": {"category": "makeup", "count": 0, "approved": 0, "pending": 0, "rejected": 0},
+        "dress": {"category": "dress", "count": 0, "approved": 0, "pending": 0, "rejected": 0},
+    }
+    for cat, st, cnt in cat_res.all():
+        if cat in categories_map:
+            categories_map[cat]["count"] += cnt
+            if st in categories_map[cat]:
+                categories_map[cat][st] += cnt
+    categories_data = list(categories_map.values())
+
+    # 4. Top 5 AI Recommended Items
+    top_items_res = await db.execute(
+        select(
+            FashionItem.item_id,
+            FashionItem.item_name,
+            FashionItem.category,
+            FashionItem.image_url,
+            FashionItem.price,
+            func.count(recommendation_items.c.rec_id).label("rec_count"),
+        )
+        .join(recommendation_items, FashionItem.item_id == recommendation_items.c.item_id)
+        .group_by(FashionItem.item_id)
+        .order_by(desc("rec_count"))
+        .limit(5)
+    )
+    top_recommended = [
+        {
+            "item_id": row[0],
+            "item_name": row[1],
+            "category": row[2],
+            "image_url": row[3],
+            "price": float(row[4]) if row[4] is not None else None,
+            "recommendation_count": row[5],
+        }
+        for row in top_items_res.all()
+    ]
+
+    # 5. Color Palettes
+    palettes_res = await db.execute(
+        select(FashionItem.color, func.count(FashionItem.item_id))
+        .where(FashionItem.color.isnot(None), FashionItem.color != "")
+        .group_by(FashionItem.color)
+        .order_by(desc(func.count(FashionItem.item_id)))
+        .limit(6)
+    )
+    color_palettes = [{"color": row[0], "count": row[1]} for row in palettes_res.all()]
+
+    # 6. Recent recommendations for activity feed
     recent_recs_res = await db.execute(
         select(Recommendation).order_by(desc(Recommendation.generated_at)).limit(8)
     )
@@ -253,8 +370,8 @@ async def get_system_logs(db: AsyncSession = Depends(get_db)):
         {
             "id": r.rec_id,
             "type": "recommendation",
-            "title": f"Look styled: {r.color_harmony}",
-            "detail": r.jewelry_suggestion,
+            "title": f"Look styled: {r.color_harmony or 'Harmonized'}",
+            "detail": r.jewelry_suggestion or r.explanation or "AI recommendation generated",
             "timestamp": r.generated_at.isoformat(),
         }
         for r in recent_recs
@@ -267,4 +384,9 @@ async def get_system_logs(db: AsyncSession = Depends(get_db)):
         total_fashion_items=total_items,
         total_chat_messages=total_chats,
         recent_activity=activity,
+        time_series=time_series,
+        occasions=occasions_data,
+        categories=categories_data,
+        top_recommended=top_recommended,
+        color_palettes=color_palettes,
     )
