@@ -66,3 +66,10 @@ class AdminStatsResponse(BaseModel):
     categories: List[dict] = []
     top_recommended: List[dict] = []
     color_palettes: List[dict] = []
+    period_users: Optional[int] = None
+    period_outfits: Optional[int] = None
+    period_recommendations: Optional[int] = None
+    filter_days: Optional[int] = None
+    filter_start: Optional[str] = None
+    filter_end: Optional[str] = None
+

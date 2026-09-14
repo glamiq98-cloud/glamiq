@@ -13,6 +13,7 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('products'); // 'products' | 'users' | 'logs'
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(false);
   const [products, setProducts] = useState([]);
   const [users, setUsers] = useState([]);
   const [productCategoryFilter, setProductCategoryFilter] = useState('');
@@ -51,6 +52,18 @@ export default function AdminDashboard() {
     setAdminUser(username || 'Admin');
     fetchAllData();
   }, [navigate]);
+
+  const fetchStats = async (filterParams = {}) => {
+    setStatsLoading(true);
+    try {
+      const res = await client.get('/admin/logs', { params: filterParams });
+      setStats(res.data);
+    } catch (err) {
+      console.error('Failed to load filtered stats', err);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
 
   const fetchAllData = async () => {
     setLoading(true);
@@ -310,8 +323,25 @@ export default function AdminDashboard() {
               </span>
               <span style={{ fontSize: '1.1rem' }}>👤</span>
             </div>
-            <div style={{ fontSize: '2.2rem', fontWeight: 800, marginTop: '0.4rem', color: '#ffffff' }}>
-              {stats.total_users}
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginTop: '0.4rem' }}>
+              <span style={{ fontSize: '2.2rem', fontWeight: 800, color: '#ffffff' }}>
+                {stats.total_users}
+              </span>
+              {stats.period_users !== null && stats.period_users !== undefined && (
+                <span
+                  style={{
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    color: '#4ade80',
+                    background: 'rgba(74,222,128,0.12)',
+                    padding: '0.15rem 0.45rem',
+                    borderRadius: 'var(--radius-pill)',
+                  }}
+                  title="New accounts in selected date range"
+                >
+                  +{stats.period_users}
+                </span>
+              )}
             </div>
             <svg viewBox="0 0 100 24" style={{ width: '100%', height: '24px', marginTop: '0.5rem', opacity: 0.8 }}>
               <path d="M 0 18 Q 25 22, 50 12 T 100 6" fill="none" stroke="var(--color-accent)" strokeWidth="2" />
@@ -335,8 +365,25 @@ export default function AdminDashboard() {
               </span>
               <span style={{ fontSize: '1.1rem' }}>👗</span>
             </div>
-            <div style={{ fontSize: '2.2rem', fontWeight: 800, marginTop: '0.4rem', color: '#ffffff' }}>
-              {stats.total_outfits}
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginTop: '0.4rem' }}>
+              <span style={{ fontSize: '2.2rem', fontWeight: 800, color: '#ffffff' }}>
+                {stats.total_outfits}
+              </span>
+              {stats.period_outfits !== null && stats.period_outfits !== undefined && (
+                <span
+                  style={{
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    color: '#60a5fa',
+                    background: 'rgba(96,165,250,0.12)',
+                    padding: '0.15rem 0.45rem',
+                    borderRadius: 'var(--radius-pill)',
+                  }}
+                  title="Outfits uploaded in selected date range"
+                >
+                  +{stats.period_outfits}
+                </span>
+              )}
             </div>
             <svg viewBox="0 0 100 24" style={{ width: '100%', height: '24px', marginTop: '0.5rem', opacity: 0.8 }}>
               <path d="M 0 20 Q 30 5, 60 16 T 100 4" fill="none" stroke="#60a5fa" strokeWidth="2" />
@@ -360,8 +407,25 @@ export default function AdminDashboard() {
               </span>
               <span style={{ fontSize: '1.1rem' }}>✨</span>
             </div>
-            <div style={{ fontSize: '2.2rem', fontWeight: 800, marginTop: '0.4rem', color: '#ffffff' }}>
-              {stats.total_recommendations}
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginTop: '0.4rem' }}>
+              <span style={{ fontSize: '2.2rem', fontWeight: 800, color: '#ffffff' }}>
+                {stats.total_recommendations}
+              </span>
+              {stats.period_recommendations !== null && stats.period_recommendations !== undefined && (
+                <span
+                  style={{
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    color: '#f472b6',
+                    background: 'rgba(236,72,153,0.12)',
+                    padding: '0.15rem 0.45rem',
+                    borderRadius: 'var(--radius-pill)',
+                  }}
+                  title="Looks styled in selected date range"
+                >
+                  +{stats.period_recommendations}
+                </span>
+              )}
             </div>
             <svg viewBox="0 0 100 24" style={{ width: '100%', height: '24px', marginTop: '0.5rem', opacity: 0.8 }}>
               <path d="M 0 16 Q 25 24, 55 8 T 100 2" fill="none" stroke="var(--color-primary)" strokeWidth="2" />
@@ -661,7 +725,12 @@ export default function AdminDashboard() {
       ) : (
         /* Tab 3: Intelligence & Analytics */
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-          <AdminAnalyticsReport stats={stats} onRefresh={fetchAllData} />
+          <AdminAnalyticsReport
+            stats={stats}
+            loading={statsLoading}
+            onFilterChange={fetchStats}
+            onRefresh={() => fetchStats()}
+          />
 
           {/* Activity Logs Stream */}
           <div

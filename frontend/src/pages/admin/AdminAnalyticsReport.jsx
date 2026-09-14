@@ -32,10 +32,14 @@ function createSmoothPath(points) {
   return path;
 }
 
-export default function AdminAnalyticsReport({ stats, onRefresh }) {
+export default function AdminAnalyticsReport({ stats, loading = false, onFilterChange, onRefresh }) {
   const [selectedMetric, setSelectedMetric] = useState('all'); // 'all' | 'recommendations' | 'outfits' | 'users'
   const [hoveredPointIndex, setHoveredPointIndex] = useState(null);
   const [hoveredOccasion, setHoveredOccasion] = useState(null);
+  const [activePreset, setActivePreset] = useState('14d');
+  const [showCustomPicker, setShowCustomPicker] = useState(false);
+  const [customStart, setCustomStart] = useState('');
+  const [customEnd, setCustomEnd] = useState('');
 
   if (!stats) return null;
 
@@ -115,55 +119,239 @@ export default function AdminAnalyticsReport({ stats, onRefresh }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       
-      {/* ── Top Control Bar ─────────────────────────────────────────────── */}
+      {/* ── Top Control & Date Filter Bar ───────────────────────────────── */}
       <div
         style={{
           display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '1rem',
-          padding: '1.1rem 1.5rem',
+          flexDirection: 'column',
+          gap: '1.25rem',
+          padding: '1.4rem 1.75rem',
           borderRadius: 'var(--radius-lg)',
-          background: 'linear-gradient(135deg, rgba(236,72,153,0.08) 0%, rgba(212,175,55,0.05) 100%)',
-          border: '1px solid rgba(236,72,153,0.2)',
+          background: 'linear-gradient(135deg, rgba(26,15,30,0.95) 0%, rgba(212,175,55,0.06) 100%)',
+          border: '1px solid rgba(212,175,55,0.25)',
           boxShadow: 'var(--shadow-card)',
+          position: 'relative',
         }}
       >
-        <div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <span>⚡</span>
-            <span>Platform Intelligence & Analytics Hub</span>
-          </h2>
-          <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginTop: '0.2rem' }}>
-            Live metrics from active wardrobes, AI stylist sessions, and catalog inventory.
-          </p>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '1rem',
+          }}
+        >
+          <div>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <span>⚡</span>
+              <span>Platform Intelligence & Analytics Hub</span>
+            </h2>
+            <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginTop: '0.2rem' }}>
+              Live metrics from active wardrobes, AI stylist sessions, and catalog inventory.
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            {/* Active Range Indicator */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.4rem 0.9rem',
+                borderRadius: 'var(--radius-pill)',
+                background: 'rgba(212,175,55,0.1)',
+                border: '1px solid rgba(212,175,55,0.3)',
+                fontSize: '0.8rem',
+                color: 'var(--color-accent-light)',
+                fontWeight: 600,
+              }}
+            >
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: loading ? '#facc15' : '#4ade80',
+                  boxShadow: loading ? '0 0 8px #facc15' : '0 0 8px #4ade80',
+                }}
+              />
+              <span>
+                {stats.filter_start && stats.filter_end
+                  ? `${stats.filter_start} ➔ ${stats.filter_end}`
+                  : '14-Day Rolling Window'}
+              </span>
+            </div>
+
+            {onRefresh && (
+              <button
+                onClick={onRefresh}
+                disabled={loading}
+                className="btn btn-secondary"
+                style={{ padding: '0.4rem 0.9rem', fontSize: '0.85rem', borderRadius: 'var(--radius-pill)' }}
+              >
+                {loading ? '⏳ Updating...' : '🔄 Refresh Analytics'}
+              </button>
+            )}
+          </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div
-            style={{
-              padding: '0.35rem 0.85rem',
-              borderRadius: 'var(--radius-pill)',
-              background: 'rgba(236,72,153,0.12)',
-              border: '1px solid rgba(236,72,153,0.3)',
-              fontSize: '0.8rem',
-              color: 'var(--color-primary-light)',
-              fontWeight: 600,
-            }}
-          >
-            🗓️ 14-Day Rolling Window
+        {/* Filter Controls Row */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '1rem',
+            paddingTop: '1rem',
+            borderTop: '1px solid rgba(255,255,255,0.06)',
+          }}
+        >
+          {/* Preset Buttons */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginRight: '0.4rem', fontWeight: 600 }}>
+              Date Range:
+            </span>
+            {[
+              { id: '7d', label: 'Last 7 Days', days: 7 },
+              { id: '14d', label: 'Last 14 Days', days: 14 },
+              { id: '30d', label: 'Last 30 Days', days: 30 },
+              { id: '90d', label: 'Last 90 Days', days: 90 },
+              { id: 'all', label: 'All Time', days: 0 },
+              { id: 'custom', label: 'Custom Range 📅' },
+            ].map((p) => {
+              const isSelected = activePreset === p.id;
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => {
+                    setActivePreset(p.id);
+                    if (p.id === 'custom') {
+                      setShowCustomPicker(!showCustomPicker);
+                    } else {
+                      setShowCustomPicker(false);
+                      if (onFilterChange) onFilterChange({ days: p.days });
+                    }
+                  }}
+                  style={{
+                    padding: '0.35rem 0.85rem',
+                    fontSize: '0.8rem',
+                    fontWeight: isSelected ? 700 : 500,
+                    borderRadius: 'var(--radius-pill)',
+                    background: isSelected
+                      ? 'linear-gradient(135deg, #ec4899 0%, #d4af37 100%)'
+                      : 'rgba(255,255,255,0.05)',
+                    color: isSelected ? '#ffffff' : 'var(--color-text-secondary)',
+                    border: isSelected ? '1px solid #d4af37' : '1px solid rgba(255,255,255,0.1)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  }}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
           </div>
-          {onRefresh && (
-            <button
-              onClick={onRefresh}
-              className="btn btn-secondary"
-              style={{ padding: '0.4rem 0.9rem', fontSize: '0.85rem', borderRadius: 'var(--radius-pill)' }}
-            >
-              🔄 Refresh Analytics
-            </button>
+
+          {/* Period Summary Badges */}
+          {(stats.period_users !== undefined || stats.period_outfits !== undefined) && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.78rem', flexWrap: 'wrap' }}>
+              <span style={{ color: 'var(--color-text-muted)' }}>Period Growth:</span>
+              <span style={{ padding: '0.2rem 0.55rem', borderRadius: '4px', background: 'rgba(212,175,55,0.12)', color: '#d4af37', fontWeight: 600 }}>
+                +{stats.period_users || 0} Users
+              </span>
+              <span style={{ padding: '0.2rem 0.55rem', borderRadius: '4px', background: 'rgba(96,165,250,0.12)', color: '#60a5fa', fontWeight: 600 }}>
+                +{stats.period_outfits || 0} Outfits
+              </span>
+              <span style={{ padding: '0.2rem 0.55rem', borderRadius: '4px', background: 'rgba(236,72,153,0.12)', color: '#ec4899', fontWeight: 600 }}>
+                +{stats.period_recommendations || 0} Recs
+              </span>
+            </div>
           )}
         </div>
+
+        {/* Expandable Custom Date Range Picker */}
+        {showCustomPicker && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!customStart || !customEnd) return;
+              if (onFilterChange) onFilterChange({ start_date: customStart, end_date: customEnd });
+            }}
+            className="animate-fade-in"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem',
+              flexWrap: 'wrap',
+              padding: '1rem',
+              background: 'rgba(0,0,0,0.45)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid rgba(212,175,55,0.3)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <label style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>
+                From:
+              </label>
+              <input
+                type="date"
+                required
+                value={customStart}
+                onChange={(e) => setCustomStart(e.target.value)}
+                className="input"
+                style={{
+                  padding: '0.35rem 0.65rem',
+                  fontSize: '0.85rem',
+                  colorScheme: 'dark',
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  borderRadius: 'var(--radius-sm)',
+                  color: '#ffffff',
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <label style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>
+                To:
+              </label>
+              <input
+                type="date"
+                required
+                value={customEnd}
+                onChange={(e) => setCustomEnd(e.target.value)}
+                className="input"
+                style={{
+                  padding: '0.35rem 0.65rem',
+                  fontSize: '0.85rem',
+                  colorScheme: 'dark',
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  borderRadius: 'var(--radius-sm)',
+                  color: '#ffffff',
+                }}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading || !customStart || !customEnd}
+              className="btn btn-primary"
+              style={{
+                padding: '0.4rem 1.1rem',
+                fontSize: '0.82rem',
+                borderRadius: 'var(--radius-pill)',
+                boxShadow: '0 0 12px rgba(236,72,153,0.3)',
+              }}
+            >
+              {loading ? 'Filtering...' : 'Apply Date Filter'}
+            </button>
+          </form>
+        )}
       </div>
 
       {/* ── Section 1: The Honeycomb / Hive Occasion Grid ───────────────── */}
@@ -363,7 +551,18 @@ export default function AdminAnalyticsReport({ stats, onRefresh }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <span style={{ fontSize: '1.25rem' }}>📈</span>
               <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>
-                14-Day Activity & Growth <span className="gradient-text">Trends</span>
+                {stats.filter_days === 7
+                  ? '7-Day'
+                  : stats.filter_days === 30
+                  ? '30-Day'
+                  : stats.filter_days === 90
+                  ? '90-Day'
+                  : stats.filter_days === 0
+                  ? 'All-Time'
+                  : stats.filter_days
+                  ? `${stats.filter_days}-Day`
+                  : 'Activity & Growth'}{' '}
+                Trends & Velocity
               </h3>
             </div>
             <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginTop: '0.25rem' }}>
@@ -495,7 +694,9 @@ export default function AdminAnalyticsReport({ stats, onRefresh }) {
 
             {/* X-axis Date Labels */}
             {timeSeries.map((d, index) => {
-              if (index % 2 !== 0 && index !== timeSeries.length - 1) return null;
+              const step =
+                timeSeries.length > 45 ? 7 : timeSeries.length > 20 ? 4 : timeSeries.length > 10 ? 2 : 1;
+              if (index % step !== 0 && index !== timeSeries.length - 1) return null;
               const x = paddingX + (index / Math.max(timeSeries.length - 1, 1)) * (chartWidth - paddingX * 2);
               return (
                 <text

@@ -236,43 +236,99 @@ async def delete_product(item_id: int, db: AsyncSession = Depends(get_db)):
 # ── Analytics & System Logs ────────────────────────────────────────────
 
 @router.get("/logs", response_model=AdminStatsResponse, summary="Get system usage analytics")
-async def get_system_logs(db: AsyncSession = Depends(get_db)):
-    """Fetch aggregated platform analytics, time-series metrics, occasion breakdown, and logs."""
+async def get_system_logs(
+    days: Optional[int] = 14,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    db: AsyncSession = Depends(get_db),
+):
+    """Fetch aggregated platform analytics, filtered time-series metrics, occasion breakdown, and logs."""
     total_users = (await db.execute(select(func.count()).select_from(User))).scalar() or 0
     total_outfits = (await db.execute(select(func.count()).select_from(Outfit))).scalar() or 0
     total_recs = (await db.execute(select(func.count()).select_from(Recommendation))).scalar() or 0
     total_items = (await db.execute(select(func.count()).select_from(FashionItem))).scalar() or 0
     total_chats = (await db.execute(select(func.count()).select_from(ChatHistory))).scalar() or 0
 
-    # 1. Continuous 14-day time series
+    # 1. Resolve date boundaries
     today = datetime.now(timezone.utc).date()
-    start_date = today - timedelta(days=13)
-    start_dt = datetime.combine(start_date, datetime.min.time(), tzinfo=timezone.utc)
+    s_date = None
+    e_date = today
 
+    if start_date and end_date:
+        try:
+            s_date = date.fromisoformat(start_date)
+            e_date = date.fromisoformat(end_date)
+            if s_date > e_date:
+                s_date, e_date = e_date, s_date
+        except (ValueError, TypeError):
+            s_date = None
+            e_date = today
+
+    if not s_date:
+        if days == 0:
+            # All-time window: find earliest user or fallback to 90 days ago
+            earliest_dt = (await db.execute(select(func.min(User.created_at)))).scalar()
+            s_date = earliest_dt.date() if earliest_dt else (today - timedelta(days=30))
+            if (e_date - s_date).days < 6:
+                s_date = e_date - timedelta(days=6)
+        else:
+            num_days = max(days or 14, 1)
+            s_date = today - timedelta(days=num_days - 1)
+
+    start_dt = datetime.combine(s_date, datetime.min.time(), tzinfo=timezone.utc)
+    end_dt = datetime.combine(e_date, datetime.max.time(), tzinfo=timezone.utc)
+
+    # Period-specific totals
+    period_users = (
+        await db.execute(
+            select(func.count())
+            .select_from(User)
+            .where(User.created_at >= start_dt, User.created_at <= end_dt)
+        )
+    ).scalar() or 0
+
+    period_outfits = (
+        await db.execute(
+            select(func.count())
+            .select_from(Outfit)
+            .where(Outfit.uploaded_at >= start_dt, Outfit.uploaded_at <= end_dt)
+        )
+    ).scalar() or 0
+
+    period_recs = (
+        await db.execute(
+            select(func.count())
+            .select_from(Recommendation)
+            .where(Recommendation.generated_at >= start_dt, Recommendation.generated_at <= end_dt)
+        )
+    ).scalar() or 0
+
+    # 2. Continuous time series spanning s_date to e_date
     user_ts_res = await db.execute(
         select(cast(User.created_at, Date).label("d"), func.count(User.user_id))
-        .where(User.created_at >= start_dt)
+        .where(User.created_at >= start_dt, User.created_at <= end_dt)
         .group_by("d")
     )
     user_ts_map = {row[0]: row[1] for row in user_ts_res.all()}
 
     outfit_ts_res = await db.execute(
         select(cast(Outfit.uploaded_at, Date).label("d"), func.count(Outfit.outfit_id))
-        .where(Outfit.uploaded_at >= start_dt)
+        .where(Outfit.uploaded_at >= start_dt, Outfit.uploaded_at <= end_dt)
         .group_by("d")
     )
     outfit_ts_map = {row[0]: row[1] for row in outfit_ts_res.all()}
 
     rec_ts_res = await db.execute(
         select(cast(Recommendation.generated_at, Date).label("d"), func.count(Recommendation.rec_id))
-        .where(Recommendation.generated_at >= start_dt)
+        .where(Recommendation.generated_at >= start_dt, Recommendation.generated_at <= end_dt)
         .group_by("d")
     )
     rec_ts_map = {row[0]: row[1] for row in rec_ts_res.all()}
 
+    total_days = (e_date - s_date).days + 1
     time_series = []
-    for i in range(14):
-        curr = start_date + timedelta(days=i)
+    for i in range(total_days):
+        curr = s_date + timedelta(days=i)
         time_series.append({
             "date": curr.strftime("%b %d"),
             "iso_date": curr.isoformat(),
@@ -281,16 +337,29 @@ async def get_system_logs(db: AsyncSession = Depends(get_db)):
             "recommendations": rec_ts_map.get(curr, 0),
         })
 
-    # 2. Occasions distribution (for Honeycomb / Hive graph)
+    # 3. Occasions distribution (filtered by period)
     occ_res = await db.execute(select(Occasion).order_by(Occasion.occasion_id))
     all_occasions = occ_res.scalars().all()
 
     occ_counts_res = await db.execute(
         select(Outfit.occasion_id, func.count(Outfit.outfit_id))
-        .where(Outfit.occasion_id.isnot(None))
+        .where(
+            Outfit.occasion_id.isnot(None),
+            Outfit.uploaded_at >= start_dt,
+            Outfit.uploaded_at <= end_dt,
+        )
         .group_by(Outfit.occasion_id)
     )
     occ_counts_map = {row[0]: row[1] for row in occ_counts_res.all()}
+
+    # If no outfits in this period, fallback to all-time so honeycomb is never completely empty
+    if not occ_counts_map:
+        occ_counts_res_all = await db.execute(
+            select(Outfit.occasion_id, func.count(Outfit.outfit_id))
+            .where(Outfit.occasion_id.isnot(None))
+            .group_by(Outfit.occasion_id)
+        )
+        occ_counts_map = {row[0]: row[1] for row in occ_counts_res_all.all()}
 
     total_tagged = sum(occ_counts_map.values()) or 1
     occasions_data = []
@@ -306,7 +375,7 @@ async def get_system_logs(db: AsyncSession = Depends(get_db)):
         })
     occasions_data.sort(key=lambda x: x["count"], reverse=True)
 
-    # 3. Product categories & status breakdown
+    # 4. Product categories & status breakdown (Catalog health)
     cat_res = await db.execute(
         select(FashionItem.category, FashionItem.status, func.count(FashionItem.item_id))
         .group_by(FashionItem.category, FashionItem.status)
@@ -323,7 +392,7 @@ async def get_system_logs(db: AsyncSession = Depends(get_db)):
                 categories_map[cat][st] += cnt
     categories_data = list(categories_map.values())
 
-    # 4. Top 5 AI Recommended Items
+    # 5. Top 5 AI Recommended Items (filtered by period)
     top_items_res = await db.execute(
         select(
             FashionItem.item_id,
@@ -334,10 +403,32 @@ async def get_system_logs(db: AsyncSession = Depends(get_db)):
             func.count(recommendation_items.c.rec_id).label("rec_count"),
         )
         .join(recommendation_items, FashionItem.item_id == recommendation_items.c.item_id)
+        .join(Recommendation, Recommendation.rec_id == recommendation_items.c.rec_id)
+        .where(Recommendation.generated_at >= start_dt, Recommendation.generated_at <= end_dt)
         .group_by(FashionItem.item_id)
         .order_by(desc("rec_count"))
         .limit(5)
     )
+    top_items_rows = top_items_res.all()
+
+    # Fallback to all-time top items if none generated in selected slice
+    if not top_items_rows:
+        top_items_fallback = await db.execute(
+            select(
+                FashionItem.item_id,
+                FashionItem.item_name,
+                FashionItem.category,
+                FashionItem.image_url,
+                FashionItem.price,
+                func.count(recommendation_items.c.rec_id).label("rec_count"),
+            )
+            .join(recommendation_items, FashionItem.item_id == recommendation_items.c.item_id)
+            .group_by(FashionItem.item_id)
+            .order_by(desc("rec_count"))
+            .limit(5)
+        )
+        top_items_rows = top_items_fallback.all()
+
     top_recommended = [
         {
             "item_id": row[0],
@@ -347,10 +438,10 @@ async def get_system_logs(db: AsyncSession = Depends(get_db)):
             "price": float(row[4]) if row[4] is not None else None,
             "recommendation_count": row[5],
         }
-        for row in top_items_res.all()
+        for row in top_items_rows
     ]
 
-    # 5. Color Palettes
+    # 6. Color Palettes
     palettes_res = await db.execute(
         select(FashionItem.color, func.count(FashionItem.item_id))
         .where(FashionItem.color.isnot(None), FashionItem.color != "")
@@ -360,11 +451,19 @@ async def get_system_logs(db: AsyncSession = Depends(get_db)):
     )
     color_palettes = [{"color": row[0], "count": row[1]} for row in palettes_res.all()]
 
-    # 6. Recent recommendations for activity feed
+    # 7. Recent recommendations for activity feed (filtered or fallback)
     recent_recs_res = await db.execute(
-        select(Recommendation).order_by(desc(Recommendation.generated_at)).limit(8)
+        select(Recommendation)
+        .where(Recommendation.generated_at >= start_dt, Recommendation.generated_at <= end_dt)
+        .order_by(desc(Recommendation.generated_at))
+        .limit(8)
     )
     recent_recs = recent_recs_res.scalars().all()
+    if not recent_recs:
+        recent_recs_res_fallback = await db.execute(
+            select(Recommendation).order_by(desc(Recommendation.generated_at)).limit(8)
+        )
+        recent_recs = recent_recs_res_fallback.scalars().all()
 
     activity = [
         {
@@ -383,6 +482,12 @@ async def get_system_logs(db: AsyncSession = Depends(get_db)):
         total_recommendations=total_recs,
         total_fashion_items=total_items,
         total_chat_messages=total_chats,
+        period_users=period_users,
+        period_outfits=period_outfits,
+        period_recommendations=period_recs,
+        filter_days=days,
+        filter_start=s_date.isoformat(),
+        filter_end=e_date.isoformat(),
         recent_activity=activity,
         time_series=time_series,
         occasions=occasions_data,
