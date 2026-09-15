@@ -1,21 +1,6 @@
 import React, { useState } from 'react';
 
 /**
- * Helper to get occasion-specific luxury iconography
- */
-function getOccasionIcon(name = '') {
-  const lower = name.toLowerCase();
-  if (lower.includes('wedding') || lower.includes('shaadi') || lower.includes('bridal')) return '💍';
-  if (lower.includes('cocktail') || lower.includes('party') || lower.includes('gala')) return '🍸';
-  if (lower.includes('formal') || lower.includes('office') || lower.includes('business')) return '💼';
-  if (lower.includes('casual') || lower.includes('daily')) return '☕';
-  if (lower.includes('vacation') || lower.includes('resort') || lower.includes('summer')) return '🏖️';
-  if (lower.includes('festive') || lower.includes('eid') || lower.includes('diwali')) return '✨';
-  if (lower.includes('date') || lower.includes('dinner')) return '🌹';
-  return '👗';
-}
-
-/**
  * Smooth SVG Bezier Path Generator for Area Charts
  */
 function createSmoothPath(points) {
@@ -35,7 +20,6 @@ function createSmoothPath(points) {
 export default function AdminAnalyticsReport({ stats, loading = false, onFilterChange, onRefresh }) {
   const [selectedMetric, setSelectedMetric] = useState('all'); // 'all' | 'recommendations' | 'outfits' | 'users'
   const [hoveredPointIndex, setHoveredPointIndex] = useState(null);
-  const [hoveredOccasion, setHoveredOccasion] = useState(null);
   const [activePreset, setActivePreset] = useState('14d');
   const [showCustomPicker, setShowCustomPicker] = useState(false);
   const [customStart, setCustomStart] = useState('');
@@ -44,7 +28,6 @@ export default function AdminAnalyticsReport({ stats, loading = false, onFilterC
   if (!stats) return null;
 
   const timeSeries = stats.time_series || [];
-  const occasions = stats.occasions || [];
   const categories = stats.categories || [];
   const topRecommended = stats.top_recommended || [];
   const colorPalettes = stats.color_palettes || [];
@@ -354,178 +337,7 @@ export default function AdminAnalyticsReport({ stats, loading = false, onFilterC
         )}
       </div>
 
-      {/* ── Section 1: The Honeycomb / Hive Occasion Grid ───────────────── */}
-      <div
-        className="card"
-        style={{
-          padding: '1.75rem',
-          background: 'linear-gradient(180deg, rgba(26,15,30,0.85) 0%, rgba(18,10,21,0.95) 100%)',
-          border: '1px solid var(--color-border)',
-          borderRadius: 'var(--radius-lg)',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '1.25rem' }}>⬡</span>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, letterSpacing: '0.02em' }}>
-                Occasion Hive <span className="gradient-text">Matrix</span>
-              </h3>
-            </div>
-            <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginTop: '0.25rem' }}>
-              Hexagonal hive cluster tracking look demand across luxury events, weddings, and casual styles.
-            </p>
-          </div>
 
-          <div style={{ fontSize: '0.8rem', color: 'var(--color-accent-light)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <span>✨</span>
-            <span>Hover a hex cell for look density</span>
-          </div>
-        </div>
-
-        {occasions.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--color-text-muted)' }}>
-            No occasion look tags recorded yet.
-          </div>
-        ) : (
-          <div
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              justifyContent: 'center',
-              gap: '1.25rem',
-              padding: '1rem 0',
-            }}
-          >
-            {occasions.map((occ, idx) => {
-              const isHovered = hoveredOccasion?.occasion_id === occ.occasion_id;
-              const hasLooks = occ.count > 0;
-              return (
-                <div
-                  key={occ.occasion_id || idx}
-                  onMouseEnter={() => setHoveredOccasion(occ)}
-                  onMouseLeave={() => setHoveredOccasion(null)}
-                  style={{
-                    position: 'relative',
-                    width: '140px',
-                    height: '155px',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    transform: isHovered ? 'scale(1.08) translateY(-4px)' : 'scale(1)',
-                    zIndex: isHovered ? 10 : 1,
-                  }}
-                >
-                  {/* SVG Hexagon Container */}
-                  <svg
-                    viewBox="0 0 120 138.56"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      filter: isHovered
-                        ? 'drop-shadow(0 0 16px rgba(236,72,153,0.6))'
-                        : hasLooks
-                        ? 'drop-shadow(0 4px 10px rgba(0,0,0,0.4))'
-                        : 'none',
-                    }}
-                  >
-                    <defs>
-                      <linearGradient id={`hexGrad-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor={isHovered ? '#ec4899' : '#2e1a35'} stopOpacity={isHovered ? 0.9 : 0.8} />
-                        <stop offset="100%" stopColor={isHovered ? '#d4af37' : '#180d1c'} stopOpacity={0.9} />
-                      </linearGradient>
-                    </defs>
-                    <polygon
-                      points="60,2 118,34.64 118,103.92 60,136.56 2,103.92 2,34.64"
-                      fill={`url(#hexGrad-${idx})`}
-                      stroke={isHovered ? '#d4af37' : hasLooks ? 'rgba(236,72,153,0.4)' : 'rgba(255,255,255,0.1)'}
-                      strokeWidth={isHovered ? '2.5' : '1.5'}
-                    />
-                  </svg>
-
-                  {/* Centered Hex Content */}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      textAlign: 'center',
-                      padding: '0.75rem',
-                      pointerEvents: 'none',
-                    }}
-                  >
-                    <div style={{ fontSize: '1.6rem', marginBottom: '0.2rem' }}>
-                      {getOccasionIcon(occ.occasion_name)}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: '0.8rem',
-                        fontWeight: 700,
-                        color: isHovered ? '#ffffff' : 'var(--color-text)',
-                        textTransform: 'capitalize',
-                        lineHeight: 1.1,
-                      }}
-                    >
-                      {occ.occasion_name}
-                    </div>
-                    <div
-                      style={{
-                        marginTop: '0.35rem',
-                        fontSize: '0.7rem',
-                        fontWeight: 600,
-                        color: isHovered ? '#fef08a' : 'var(--color-accent)',
-                        background: 'rgba(0,0,0,0.35)',
-                        padding: '0.15rem 0.5rem',
-                        borderRadius: 'var(--radius-pill)',
-                      }}
-                    >
-                      {occ.count} {occ.count === 1 ? 'look' : 'looks'}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Hover Occasion Details Callout */}
-        {hoveredOccasion && (
-          <div
-            className="animate-fade-in"
-            style={{
-              marginTop: '1.25rem',
-              padding: '0.85rem 1.25rem',
-              borderRadius: 'var(--radius-md)',
-              background: 'rgba(212,175,55,0.08)',
-              border: '1px solid rgba(212,175,55,0.25)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: '1rem',
-            }}
-          >
-            <div>
-              <span style={{ fontWeight: 700, color: 'var(--color-accent-light)' }}>
-                {getOccasionIcon(hoveredOccasion.occasion_name)} {hoveredOccasion.occasion_name}:
-              </span>{' '}
-              <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>
-                {hoveredOccasion.description || 'Occasion style profile for luxury curation.'}
-              </span>
-            </div>
-            <div style={{ display: 'flex', gap: '1rem', fontSize: '0.85rem' }}>
-              <span>
-                Tagged Looks: <strong>{hoveredOccasion.count}</strong>
-              </span>
-              <span>
-                Occasion Share: <strong>{hoveredOccasion.percentage}%</strong>
-              </span>
-            </div>
-          </div>
-        )}
-      </div>
 
       {/* ── Section 2: Velvet Glow Trend Area Graph ─────────────────────── */}
       <div

@@ -731,65 +731,6 @@ export default function AdminDashboard() {
             onFilterChange={fetchStats}
             onRefresh={() => fetchStats()}
           />
-
-          {/* Activity Logs Stream */}
-          <div
-            className="card"
-            style={{
-              padding: '1.75rem',
-              background: 'linear-gradient(180deg, rgba(26,15,30,0.85) 0%, rgba(18,10,21,0.95) 100%)',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-lg)',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
-              <span style={{ fontSize: '1.25rem' }}>⚡</span>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>Recent Style Activity Log</h3>
-            </div>
-            {stats?.recent_activity?.length === 0 ? (
-              <p style={{ color: 'var(--color-text-muted)' }}>No recent activity records.</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {stats?.recent_activity?.map((act) => (
-                  <div
-                    key={act.id}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '1rem 1.25rem',
-                      background: 'rgba(255, 255, 255, 0.02)',
-                      border: '1px solid rgba(255, 255, 255, 0.05)',
-                      borderRadius: 'var(--radius-md)',
-                      flexWrap: 'wrap',
-                      gap: '0.75rem',
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '0.2rem', color: 'var(--color-text)' }}>
-                        {act.title}
-                      </div>
-                      <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-                        {act.detail}
-                      </div>
-                    </div>
-                    <span
-                      style={{
-                        fontSize: '0.78rem',
-                        color: 'var(--color-text-muted)',
-                        background: 'rgba(0,0,0,0.35)',
-                        padding: '0.2rem 0.65rem',
-                        borderRadius: 'var(--radius-pill)',
-                        border: '1px solid rgba(255,255,255,0.05)',
-                      }}
-                    >
-                      {new Date(act.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
       )}
 
