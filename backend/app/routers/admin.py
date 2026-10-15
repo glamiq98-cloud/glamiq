@@ -3,6 +3,8 @@ Admin router — Auth, User Management, Product Catalog Moderation, and Usage An
 """
 
 from datetime import datetime, timezone, timedelta, date
+import base64
+import io
 import uuid
 import os
 from pathlib import Path
@@ -134,7 +136,14 @@ async def list_products(
 
 @router.post("/products/upload-image", summary="Upload product image file")
 async def upload_product_image(file: UploadFile = File(...)):
-    """Upload a product photo and return the relative static URL."""
+    """Upload a product photo and return a permanent data URL.
+
+    Images are compressed with Pillow and stored as base64 data URLs in
+    the database (fashion_items.image_url is Text). This keeps them
+    permanent: Render's free-tier filesystem is ephemeral, so files
+    written to backend/uploads/ were wiped on every restart, which made
+    uploaded images go black after a while.
+    """
     ext = Path(file.filename or "").suffix.lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(
@@ -156,14 +165,39 @@ async def upload_product_image(file: UploadFile = File(...)):
                 detail="File too large. Maximum size is 10MB",
             )
         await file.seek(0)
-        
+
     contents = await file.read()
 
-    filename = f"prod_{uuid.uuid4().hex[:10]}{ext}"
-    file_path = PRODUCT_UPLOAD_DIR / filename
-    file_path.write_bytes(contents)
+    # Compress: downscale large images and re-encode as JPEG to keep the
+    # base64 payload small enough for comfortable DB storage.
+    try:
+        from PIL import Image
 
-    return {"image_url": f"/uploads/products/{filename}"}
+        img = Image.open(io.BytesIO(contents))
+        # Normalize orientation from EXIF so phone photos aren't sideways
+        try:
+            from PIL import ImageOps
+
+            img = ImageOps.exif_transpose(img)
+        except Exception:
+            pass
+        img = img.convert("RGB")
+        img.thumbnail((1200, 1200), Image.LANCZOS)
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=82, optimize=True)
+        contents = buf.getvalue()
+        mime = "image/jpeg"
+    except Exception:
+        # If Pillow can't process it, store the original bytes as-is.
+        mime = {
+            ".png": "image/png",
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".webp": "image/webp",
+        }.get(ext, "image/jpeg")
+
+    data_url = f"data:{mime};base64," + base64.b64encode(contents).decode("ascii")
+    return {"image_url": data_url}
 
 
 @router.post("/products", response_model=FashionItemResponse, status_code=status.HTTP_201_CREATED, summary="Add new product")

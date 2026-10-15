@@ -194,21 +194,25 @@ SAMPLE_ITEMS = [
 
 async def seed():
     async with async_session_factory() as session:
-        # Check existing count
-        res = await session.execute(text("SELECT count(*) FROM fashion_items"))
-        count = res.scalar() or 0
-        
-        if count >= len(SAMPLE_ITEMS):
-            print(f"[OK] fashion_items already populated with {count} items.")
+        # Idempotent seed: skip any item whose name already exists.
+        # Never re-insert on restarts: the admin may have deleted items
+        # on purpose, and re-adding them would resurrect deleted products
+        # (and create duplicates if run twice).
+        res = await session.execute(text("SELECT item_name FROM fashion_items"))
+        existing_names = {row[0] for row in res.all()}
+
+        new_items = [d for d in SAMPLE_ITEMS if d["item_name"] not in existing_names]
+        if not new_items:
+            print(f"[OK] All {len(SAMPLE_ITEMS)} seed items already present; skipping.")
             return
 
-        print(f"Seeding {len(SAMPLE_ITEMS)} curated jewelry and makeup items...")
-        for item_data in SAMPLE_ITEMS:
+        print(f"Seeding {len(new_items)} new curated items...")
+        for item_data in new_items:
             item = FashionItem(**item_data)
             session.add(item)
-        
+
         await session.commit()
-        print(f"[SUCCESS] Seeded {len(SAMPLE_ITEMS)} fashion items into catalog!")
+        print(f"[SUCCESS] Seeded {len(new_items)} fashion items into catalog!")
 
     await engine.dispose()
 

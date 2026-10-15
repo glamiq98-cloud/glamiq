@@ -132,12 +132,20 @@ export default function AdminDashboard() {
 
       // If an image file was selected, upload it first
       if (productImageFile) {
+        // NOTE: use native fetch (not the axios client) for FormData uploads.
+        // The axios instance defaults Content-Type to application/json, which
+        // corrupts multipart uploads. Native fetch lets the browser set the
+        // correct multipart boundary automatically.
         const formData = new FormData();
         formData.append('file', productImageFile);
-        const uploadRes = await client.post('/admin/products/upload-image', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
+        const uploadRes = await fetch('/api/admin/products/upload-image', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include',
         });
-        finalImageUrl = uploadRes.data.image_url;
+        if (!uploadRes.ok) throw new Error('Image upload failed');
+        const uploadData = await uploadRes.json();
+        finalImageUrl = uploadData.image_url;
       }
 
       if (!finalImageUrl) {
@@ -170,7 +178,8 @@ export default function AdminDashboard() {
       setActionMessage('New product added to catalog with uploaded image! ✨');
       setTimeout(() => setActionMessage(''), 3000);
     } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to add product');
+      const _d = err.response?.data?.detail;
+      alert(Array.isArray(_d) ? _d.map((e) => e.msg).join('; ') : (_d || 'Failed to add product'));
     } finally {
       setSubmittingProduct(false);
     }
@@ -201,12 +210,20 @@ export default function AdminDashboard() {
       let finalImageUrl = editingProduct.image_url;
 
       if (productImageFile) {
+        // NOTE: use native fetch (not the axios client) for FormData uploads.
+        // The axios instance defaults Content-Type to application/json, which
+        // corrupts multipart uploads. Native fetch lets the browser set the
+        // correct multipart boundary automatically.
         const formData = new FormData();
         formData.append('file', productImageFile);
-        const uploadRes = await client.post('/admin/products/upload-image', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
+        const uploadRes = await fetch('/api/admin/products/upload-image', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include',
         });
-        finalImageUrl = uploadRes.data.image_url;
+        if (!uploadRes.ok) throw new Error('Image upload failed');
+        const uploadData = await uploadRes.json();
+        finalImageUrl = uploadData.image_url;
       }
 
       const payload = { ...editingProduct, image_url: finalImageUrl };
@@ -222,7 +239,8 @@ export default function AdminDashboard() {
       setActionMessage('Product updated successfully! ✨');
       setTimeout(() => setActionMessage(''), 3000);
     } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to update product');
+      const _d = err.response?.data?.detail;
+      alert(Array.isArray(_d) ? _d.map((e) => e.msg).join('; ') : (_d || 'Failed to update product'));
     } finally {
       setSubmittingEdit(false);
     }
